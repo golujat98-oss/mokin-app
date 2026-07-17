@@ -101,6 +101,71 @@ export default function DashboardLayout({
     }
   }
 
+  // Temporary debugging hook to trace the mobile drawer components at runtime
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const intervalId = setInterval(() => {
+      const drawer = document.getElementById('debug-drawer')
+      const scrollWrapper = document.getElementById('debug-scroll-wrapper')
+      const footer = document.getElementById('debug-footer')
+      const bottomNav = document.getElementById('debug-bottom-nav')
+      
+      console.log('=== SIDEBAR DEBUGGING INFO ===')
+      console.log('Viewport Height (window.innerHeight):', window.innerHeight)
+      console.log('Viewport Width (window.innerWidth):', window.innerWidth)
+      
+      if (drawer) {
+        const rect = drawer.getBoundingClientRect()
+        console.log('Drawer rect:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height,
+          zIndex: window.getComputedStyle(drawer).zIndex
+        })
+      } else {
+        console.log('Drawer NOT found in DOM!')
+      }
+
+      if (scrollWrapper) {
+        const rect = scrollWrapper.getBoundingClientRect()
+        console.log('ScrollWrapper rect:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height
+        })
+      } else {
+        console.log('ScrollWrapper NOT found in DOM!')
+      }
+
+      if (footer) {
+        const rect = footer.getBoundingClientRect()
+        console.log('Footer rect:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height,
+          visible: rect.height > 0 && rect.width > 0,
+          inViewport: rect.bottom <= window.innerHeight && rect.top >= 0
+        })
+      } else {
+        console.log('Footer NOT found in DOM!')
+      }
+
+      if (bottomNav) {
+        const rect = bottomNav.getBoundingClientRect()
+        console.log('BottomNav rect:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          zIndex: window.getComputedStyle(bottomNav).zIndex
+        })
+      } else {
+        console.log('BottomNav NOT found in DOM!')
+      }
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [mobileMenuOpen])
+
   const triggerSoftLock = async () => {
     // We can trigger by forcing reload which checks lock PIN, 
     // or by custom dispatch event that QuickLock.tsx listens to!
@@ -232,13 +297,15 @@ export default function DashboardLayout({
 
               {/* Drawer Container */}
               <motion.div
+                id="debug-drawer"
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="fixed right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-[50] flex flex-col"
+                style={{ border: '3px solid red' }}
               >
-                {/* Header */}
+                {/* Header (fixed) */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
                   <span className="font-bold text-sm text-slate-300">Navigation</span>
                   <button
@@ -249,30 +316,33 @@ export default function DashboardLayout({
                   </button>
                 </div>
 
-                {/* Items */}
-                <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1.5">
-                  {navItems.map((item) => {
-                    const isActive = pathname === item.href
-                    const Icon = item.icon
-                    return (
-                      <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
-                        <span
-                          className={`flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer ${
-                            isActive
-                              ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/15'
-                              : 'text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent'
-                          }`}
-                        >
-                          <Icon size={18} className="mr-3" />
-                          {item.name}
-                        </span>
-                      </Link>
-                    )
-                  })}
-                </nav>
+                {/* Scroll Wrapper (flex-1 min-h-0 overflow-hidden) */}
+                <div id="debug-scroll-wrapper" className="flex-1 min-h-0 overflow-hidden flex flex-col" style={{ border: '3px solid blue' }}>
+                  {/* Navigation (overflow-y-auto) */}
+                  <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
+                    {navItems.map((item) => {
+                      const isActive = pathname === item.href
+                      const Icon = item.icon
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
+                          <span
+                            className={`flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer ${
+                              isActive
+                                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/15'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent'
+                            }`}
+                          >
+                            <Icon size={18} className="mr-3" />
+                            {item.name}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </nav>
+                </div>
 
-                {/* Footer block */}
-                <div className="p-4 border-t border-slate-800 mt-auto shrink-0">
+                {/* Footer (Logout) */}
+                <div id="debug-footer" className="p-4 border-t border-slate-800 shrink-0" style={{ border: '3px solid green' }}>
                   <button
                     onClick={handleLogout}
                     disabled={loggingOut}
@@ -299,24 +369,26 @@ export default function DashboardLayout({
 
       {/* MOBILE COMPACT BOTTOM NAVIGATION BAR */}
       {/* Only rendered on small screens to give quick, thumb-friendly access to primary sections */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 border-t border-slate-800 backdrop-blur-lg flex items-center justify-around px-2 z-30">
-        {navItems.slice(0, 5).map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
-          return (
-            <Link key={item.name} href={item.href}>
-              <span
-                className={`flex flex-col items-center justify-center w-12 h-12 rounded-lg transition-all ${
-                  isActive ? 'text-indigo-400' : 'text-slate-500'
-                }`}
-              >
-                <Icon size={20} />
-                <span className="text-[10px] mt-0.5 font-medium">{item.name}</span>
-              </span>
-            </Link>
-          )
-        })}
-      </nav>
+      {!mobileMenuOpen && (
+        <nav id="debug-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 border-t border-slate-800 backdrop-blur-lg flex items-center justify-around px-2 z-30" style={{ border: '3px solid yellow' }}>
+          {navItems.slice(0, 5).map((item) => {
+            const isActive = pathname === item.href
+            const Icon = item.icon
+            return (
+              <Link key={item.name} href={item.href}>
+                <span
+                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-lg transition-all ${
+                    isActive ? 'text-indigo-400' : 'text-slate-500'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span className="text-[10px] mt-0.5 font-medium">{item.name}</span>
+                </span>
+              </Link>
+            )
+          })}
+        </nav>
+      )}
     </div>
   )
 }
