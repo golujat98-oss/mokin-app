@@ -31,6 +31,7 @@ export async function updateSession(request: NextRequest) {
 
   const url = request.nextUrl.clone()
   const isAuthPage = url.pathname.startsWith('/login') || url.pathname.startsWith('/signup')
+  const isCallbackRoute = url.pathname.startsWith('/auth')
 
   // Get current authenticated user
   const {
@@ -38,7 +39,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // If not logged in and trying to access app pages, redirect to login
-  if (!user && !isAuthPage && url.pathname !== '/') {
+  if (!user && !isAuthPage && !isCallbackRoute && url.pathname !== '/') {
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
