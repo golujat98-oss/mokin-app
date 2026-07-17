@@ -101,70 +101,7 @@ export default function DashboardLayout({
     }
   }
 
-  // Temporary debugging hook to trace the mobile drawer components at runtime
-  useEffect(() => {
-    if (!mobileMenuOpen) return
 
-    const intervalId = setInterval(() => {
-      const drawer = document.getElementById('debug-drawer')
-      const scrollWrapper = document.getElementById('debug-scroll-wrapper')
-      const footer = document.getElementById('debug-footer')
-      const bottomNav = document.getElementById('debug-bottom-nav')
-      
-      console.log('=== SIDEBAR DEBUGGING INFO ===')
-      console.log('Viewport Height (window.innerHeight):', window.innerHeight)
-      console.log('Viewport Width (window.innerWidth):', window.innerWidth)
-      
-      if (drawer) {
-        const rect = drawer.getBoundingClientRect()
-        console.log('Drawer rect:', {
-          top: rect.top,
-          bottom: rect.bottom,
-          height: rect.height,
-          zIndex: window.getComputedStyle(drawer).zIndex
-        })
-      } else {
-        console.log('Drawer NOT found in DOM!')
-      }
-
-      if (scrollWrapper) {
-        const rect = scrollWrapper.getBoundingClientRect()
-        console.log('ScrollWrapper rect:', {
-          top: rect.top,
-          bottom: rect.bottom,
-          height: rect.height
-        })
-      } else {
-        console.log('ScrollWrapper NOT found in DOM!')
-      }
-
-      if (footer) {
-        const rect = footer.getBoundingClientRect()
-        console.log('Footer rect:', {
-          top: rect.top,
-          bottom: rect.bottom,
-          height: rect.height,
-          visible: rect.height > 0 && rect.width > 0,
-          inViewport: rect.bottom <= window.innerHeight && rect.top >= 0
-        })
-      } else {
-        console.log('Footer NOT found in DOM!')
-      }
-
-      if (bottomNav) {
-        const rect = bottomNav.getBoundingClientRect()
-        console.log('BottomNav rect:', {
-          top: rect.top,
-          bottom: rect.bottom,
-          zIndex: window.getComputedStyle(bottomNav).zIndex
-        })
-      } else {
-        console.log('BottomNav NOT found in DOM!')
-      }
-    }, 1000)
-
-    return () => clearInterval(intervalId)
-  }, [mobileMenuOpen])
 
   const triggerSoftLock = async () => {
     // We can trigger by forcing reload which checks lock PIN, 
@@ -297,13 +234,11 @@ export default function DashboardLayout({
 
               {/* Drawer Container */}
               <motion.div
-                id="debug-drawer"
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="fixed right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-[50] flex flex-col"
-                style={{ border: '3px solid red' }}
               >
                 {/* Header (fixed) */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
@@ -317,7 +252,7 @@ export default function DashboardLayout({
                 </div>
 
                 {/* Scroll Wrapper (flex-1 min-h-0 overflow-hidden) */}
-                <div id="debug-scroll-wrapper" className="flex-1 min-h-0 overflow-hidden flex flex-col" style={{ border: '3px solid blue' }}>
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                   {/* Navigation (overflow-y-auto) */}
                   <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
                     {navItems.map((item) => {
@@ -342,7 +277,7 @@ export default function DashboardLayout({
                 </div>
 
                 {/* Footer (Logout) */}
-                <div id="debug-footer" className="p-4 border-t border-slate-800 shrink-0" style={{ border: '3px solid green' }}>
+                <div className="p-4 border-t border-slate-800 shrink-0">
                   <button
                     onClick={handleLogout}
                     disabled={loggingOut}
@@ -370,7 +305,7 @@ export default function DashboardLayout({
       {/* MOBILE COMPACT BOTTOM NAVIGATION BAR */}
       {/* Only rendered on small screens to give quick, thumb-friendly access to primary sections */}
       {!mobileMenuOpen && (
-        <nav id="debug-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 border-t border-slate-800 backdrop-blur-lg flex items-center justify-around px-2 z-30" style={{ border: '3px solid yellow' }}>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 border-t border-slate-800 backdrop-blur-lg flex items-center justify-around px-2 z-30">
           {navItems.slice(0, 5).map((item) => {
             const isActive = pathname === item.href
             const Icon = item.icon
