@@ -49,6 +49,7 @@ export default function DashboardLayout({
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [businessName, setBusinessName] = useState<string>('Mookin Business')
   const [loading, setLoading] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     async function fetchUser() {
@@ -89,11 +90,14 @@ export default function DashboardLayout({
   }, [supabase, router])
 
   const handleLogout = async () => {
+    setLoggingOut(true)
     const { error } = await supabase.auth.signOut()
     if (!error) {
       setMobileMenuOpen(false)
       router.push('/login')
       router.refresh()
+    } else {
+      setLoggingOut(false)
     }
   }
 
@@ -235,7 +239,7 @@ export default function DashboardLayout({
                 className="fixed right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-[50] flex flex-col"
               >
                 {/* Header */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
+                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
                   <span className="font-bold text-sm text-slate-300">Navigation</span>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
@@ -246,7 +250,7 @@ export default function DashboardLayout({
                 </div>
 
                 {/* Items */}
-                <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1.5">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href
                     const Icon = item.icon
@@ -268,13 +272,18 @@ export default function DashboardLayout({
                 </nav>
 
                 {/* Footer block */}
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-4 border-t border-slate-800 mt-auto shrink-0">
                   <button
                     onClick={handleLogout}
-                    className="w-full py-2.5 rounded-xl bg-red-950/20 border border-red-900/40 text-red-400 font-medium text-sm flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={loggingOut}
+                    className="w-full py-2.5 rounded-xl bg-red-950/20 border border-red-900/40 text-red-400 font-medium text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <LogOut size={16} />
-                    Logout
+                    {loggingOut ? (
+                      <Loader2 className="animate-spin h-4 w-4" />
+                    ) : (
+                      <LogOut size={16} />
+                    )}
+                    {loggingOut ? 'Logging out...' : 'Logout'}
                   </button>
                 </div>
               </motion.div>
