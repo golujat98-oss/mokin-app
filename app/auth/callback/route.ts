@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
 
   console.log('Code:', code)
+  console.log('Request Cookies:', request.cookies.getAll().map(c => `${c.name}: ${c.value ? '[PRESENT]' : '[EMPTY]'}`))
 
   if (!code) {
     return NextResponse.json({
