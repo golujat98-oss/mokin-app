@@ -207,7 +207,7 @@ export default function BookingsPage() {
       }
       const todayStr = getTodayStr()
 
-      const sortedBookings = (bookingsData || []).sort((a, b) => {
+      const sortedBookings = (bookingsData || []).sort((a: any, b: any) => {
         const isUpcomingA = a.event_date >= todayStr
         const isUpcomingB = b.event_date >= todayStr
         
@@ -281,7 +281,7 @@ export default function BookingsPage() {
       return
     }
 
-    const conflict = matches.find((b) => {
+    const conflict = matches.find((b: any) => {
       if (excludeId && b.id === excludeId) return false
       if (!b.start_time || !b.end_time || !start || !end) {
         return true
