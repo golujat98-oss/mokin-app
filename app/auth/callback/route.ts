@@ -10,8 +10,9 @@ export async function GET(request: NextRequest) {
   // Exchange must happen only in this callback handler.
   const code = searchParams.get('code')
 
-  console.log('Code:', code)
-  console.log('Request Cookies:', request.cookies.getAll().map(c => `${c.name}: ${c.value ? '[PRESENT]' : '[EMPTY]'}`))
+  console.log('[Route Handler] Code:', code)
+  console.log('[Route Handler] Request cookies list:', request.cookies.getAll().map(c => `${c.name}=${c.value}`))
+  console.log('[Route Handler] Raw Cookie Header:', request.headers.get('cookie'))
 
   if (!code) {
     return NextResponse.json({
