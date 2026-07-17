@@ -18,7 +18,8 @@ import {
   Lock,
   User,
   Loader2,
-  BarChart3
+  BarChart3,
+  PhoneCall
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuickLock from '@/components/auth/QuickLock'
@@ -32,6 +33,7 @@ const navItems = [
   { name: 'Expenses', href: '/expenses', icon: CircleDollarSign },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Contact Us', href: '/contact', icon: PhoneCall },
 ]
 
 export default function DashboardLayout({
@@ -89,6 +91,7 @@ export default function DashboardLayout({
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
     if (!error) {
+      setMobileMenuOpen(false)
       router.push('/login')
       router.refresh()
     }
@@ -271,7 +274,7 @@ export default function DashboardLayout({
                     className="w-full py-2.5 rounded-xl bg-red-950/20 border border-red-900/40 text-red-400 font-medium text-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <LogOut size={16} />
-                    Sign Out
+                    Logout
                   </button>
                 </div>
               </motion.div>
