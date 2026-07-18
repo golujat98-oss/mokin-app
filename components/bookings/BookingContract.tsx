@@ -108,10 +108,8 @@ export async function downloadBookingPDF(booking: any, profile: any) {
   element.innerHTML = `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; background: #ffffff; min-height: 1120px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
       
-      {/* Top Section */}
       <div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 24px; margin-bottom: 24px;">
-          {/* Logo & Company details */}
           <div style="display: flex; gap: 16px; align-items: center; max-width: 65%;">
             ${logoUrl ? `
               <img src="${logoUrl}" style="max-height: 70px; max-width: 120px; object-fit: contain; border-radius: 8px; border: 1px solid #e2e8f0; padding: 2px;" />
@@ -131,7 +129,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
             </div>
           </div>
 
-          {/* Invoice Header details */}
           <div style="text-align: right; min-width: 30%;">
             <h1 style="font-size: 22px; font-weight: 900; color: #4f46e5; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">INVOICE</h1>
             <div style="font-size: 11px; color: #475569; line-height: 1.6;">
@@ -142,9 +139,7 @@ export async function downloadBookingPDF(booking: any, profile: any) {
           </div>
         </div>
 
-        {/* Client & Event Section */}
         <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 28px;">
-          {/* Bill To */}
           <div style="width: 48%; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background-color: #f8fafc;">
             <h4 style="font-size: 9px; font-weight: bold; color: #64748b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">BILL TO</h4>
             <div style="font-size: 11px; line-height: 1.6; color: #334155;">
@@ -154,7 +149,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
             </div>
           </div>
 
-          {/* Event details */}
           <div style="width: 48%; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background-color: #f8fafc;">
             <h4 style="font-size: 9px; font-weight: bold; color: #64748b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">EVENT SUMMARY</h4>
             <div style="font-size: 11px; line-height: 1.6; color: #334155;">
@@ -166,7 +160,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
           </div>
         </div>
 
-        {/* Table of Services */}
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
           <thead>
             <tr style="background: #0f172a; color: #ffffff;">
@@ -185,9 +178,7 @@ export async function downloadBookingPDF(booking: any, profile: any) {
           </tbody>
         </table>
 
-        {/* Payment Summary Block & Ribbon */}
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 24px;">
-          {/* Status stamp banner */}
           <div style="flex-1; display: flex; align-items: center; justify-content: center; height: 95px; border-radius: 12px; background: ${statusBg}; border: 1px solid ${statusColor}40;">
             <div style="text-align: center; color: ${statusColor};">
               <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; tracking-wider: 0.1em; opacity: 0.85;">Payment Status</div>
@@ -195,7 +186,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
             </div>
           </div>
 
-          {/* Totals Table */}
           <div style="width: 45%; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; background: #ffffff;">
             <div style="display: flex; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-size: 11px; color: #475569;">
               <span>Total Price:</span>
@@ -212,7 +202,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
           </div>
         </div>
 
-        {/* Special Notes / Event Requirements */}
         ${booking.notes ? `
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 24px; font-size: 10px; box-sizing: border-box;">
           <h5 style="margin: 0 0 6px 0; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">Special Instructions</h5>
@@ -221,11 +210,8 @@ export async function downloadBookingPDF(booking: any, profile: any) {
         ` : ''}
       </div>
 
-      {/* Bottom Section */}
       <div style="margin-top: auto;">
-        {/* Terms & Assets Grid */}
         <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-bottom: 24px;">
-          {/* Left: Terms & Conditions and QR */}
           <div style="width: 55%; display: flex; flex-direction: column; gap: 12px;">
             <div style="font-size: 9px; color: #64748b; line-height: 1.5;">
               <h5 style="margin: 0 0 6px 0; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">Terms & Conditions</h5>
@@ -240,7 +226,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
             ` : ''}
           </div>
 
-          {/* Right: Signature Seal & Signed Box */}
           <div style="width: 35%; display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 8px;">
             ${signatureUrl ? `
               <div style="display: flex; flex-direction: column; align-items: flex-end;">
@@ -255,7 +240,6 @@ export async function downloadBookingPDF(booking: any, profile: any) {
           </div>
         </div>
 
-        {/* Bottom Bar branding */}
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
           <span>Thank you for your business!</span>
           <span style="font-weight: 700; color: #4f46e5; text-transform: uppercase; tracking-wider: 0.05em;">Generated by Smart Booking Pro</span>
