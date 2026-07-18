@@ -48,6 +48,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const isNavigation =
+    event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    requestUrl.pathname === '/';
+
+  // For navigations/documents: behave like a normal browser (network-first)
+  // to avoid serving a broken/stale cached navigation response (ERR_FAILED).
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          return networkResponse;
+        })
+        .catch(() => {
+          // If offline, fall back to the cached root.
+          return caches.match('/');
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -61,9 +82,9 @@ self.addEventListener('fetch', (event) => {
             networkResponse &&
             networkResponse.status === 200 &&
             (requestUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico)$/) ||
-             requestUrl.host.includes('fonts.gstatic.com') ||
-             requestUrl.host.includes('fonts.googleapis.com') ||
-             requestUrl.pathname.includes('/_next/static/'))
+              requestUrl.host.includes('fonts.gstatic.com') ||
+              requestUrl.host.includes('fonts.googleapis.com') ||
+              requestUrl.pathname.includes('/_next/static/'))
           ) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -73,9 +94,10 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Fallback if offline
+          // Fallback if offline (non-navigation)
           return caches.match('/');
         });
     })
   );
 });
+
