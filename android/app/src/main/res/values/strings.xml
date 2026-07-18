@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Smart Booking Pro</string>
+    <string name="title_activity_main">Smart Booking Pro</string>
+    <string name="package_name">com.smartbookingpro.app</string>
+    <string name="custom_url_scheme">com.smartbookingpro.app</string>
+</resources>

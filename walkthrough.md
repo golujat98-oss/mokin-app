@@ -103,8 +103,16 @@ Here is a summary of all optimizations applied across the Smart Booking Pro code
   - Replaced all default Next.js branding metadata in `layout.tsx` (removed all "Create Next App" entries) with `Smart Booking Pro`.
   - Added native `<title>` tags to each individual page, leveraging React 19 title element hoisting to update the browser tab title to `<Page> | Smart Booking Pro` dynamically.
 
+
+### 11. Premium Booking Invoice PDF Redesign
+- **File**: [`components/bookings/BookingContract.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/components/bookings/BookingContract.tsx)
+- **Change**:
+  - Completely redesigned the HTML layout template loaded inside `downloadBookingPDF`.
+  - Added query support to automatically resolve full company brand profile metadata directly from Supabase DB/Auth when compiling PDFs.
+  - Implemented modern layout designs incorporating company logo, owner details, GSTIN, full office address, structured client bill-to card, detailed event summary box, premium high-contrast dark table rows, color-coded payment status badge ribbon (PAID IN FULL / PARTIALLY PAID / PAYMENT PENDING), custom invoice suffix number format, dynamic UPI QR image payment scan block, authorized signature seal stamps, and fine terms & conditions sections.
+
 ---
 
 ## 📈 Verification Status
 - **ESLint Linter**: Passed with 0 errors (`npx eslint app`).
-- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 25.8s with 0 errors.
+- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 104s with 0 errors.
