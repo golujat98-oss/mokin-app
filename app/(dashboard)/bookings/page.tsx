@@ -18,7 +18,9 @@ import {
   MapPin,
   Clock,
   AlertTriangle,
-  Share2
+  Share2,
+  Phone,
+  Eye
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
@@ -102,6 +104,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [viewBooking, setViewBooking] = useState<Booking | null>(null)
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState('')
@@ -679,132 +682,406 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* BOOKINGS TABLE */}
+      {/* BOOKINGS TABLE / CARDS */}
       {filteredBookings.length === 0 ? (
         <div className="text-center py-16 bg-slate-900/20 border border-slate-900 rounded-2xl">
           <Calendar className="h-10 w-10 text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 text-sm">No booking records found.</p>
         </div>
       ) : (
-        <div className="bg-slate-900/20 backdrop-blur-md border border-slate-900 rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-900 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/30">
-                  <th className="py-3.5 px-4">Client Name</th>
-                  <th className="py-3.5 px-4">Event Date & Time</th>
-                  <th className="py-3.5 px-4">Service Package</th>
-                  <th className="py-3.5 px-4">Billing Summary</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900/50">
-                {filteredBookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-900/20 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div>
-                        <p className="font-bold text-white">{b.customer_name}</p>
-                        <p className="text-xs text-slate-450">{b.mobile_number}</p>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex flex-col text-slate-300">
-                        <span className="font-medium">{formatIndianDate(b.event_date)}</span>
-                        {b.start_time && b.end_time ? (
-                          <span className="text-xs text-slate-500 mt-0.5 flex items-center">
-                            <Clock size={12} className="mr-1" /> {format12HourTime(b.start_time)} - {format12HourTime(b.end_time)}
-                          </span>
+        <>
+          {/* DESKTOP TABLE VIEW */}
+          <div className="hidden md:block bg-slate-900/20 backdrop-blur-md border border-slate-900 rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-900 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/30">
+                    <th className="py-3.5 px-4">Client Name</th>
+                    <th className="py-3.5 px-4">Event Date & Time</th>
+                    <th className="py-3.5 px-4">Service Package</th>
+                    <th className="py-3.5 px-4">Billing Summary</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/50">
+                  {filteredBookings.map((b) => (
+                    <tr key={b.id} className="hover:bg-slate-900/20 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div>
+                          <p className="font-bold text-white">{b.customer_name}</p>
+                          <p className="text-xs text-slate-450">{b.mobile_number}</p>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col text-slate-300">
+                          <span className="font-medium">{formatIndianDate(b.event_date)}</span>
+                          {b.start_time && b.end_time ? (
+                            <span className="text-xs text-slate-500 mt-0.5 flex items-center">
+                              <Clock size={12} className="mr-1" /> {format12HourTime(b.start_time)} - {format12HourTime(b.end_time)}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-500 mt-0.5">Time unspecified</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {b.venue_address ? (
+                          <div className="text-xs text-slate-400 flex flex-col gap-1">
+                            <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 self-start text-indigo-400">
+                              {b.program_name_snapshot || 'General'}
+                            </span>
+                            <span className="flex items-center text-slate-500 truncate max-w-[200px]">
+                              <MapPin size={10} className="mr-1 shrink-0" /> {b.venue_address}
+                            </span>
+                          </div>
                         ) : (
-                          <span className="text-xs text-slate-500 mt-0.5">Time unspecified</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {b.venue_address ? (
-                        <div className="text-xs text-slate-400 flex flex-col gap-1">
-                          <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 self-start text-indigo-400">
+                          <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 text-xs text-slate-500">
                             {b.program_name_snapshot || 'General'}
                           </span>
-                          <span className="flex items-center text-slate-500 truncate max-w-[200px]">
-                            <MapPin size={10} className="mr-1 shrink-0" /> {b.venue_address}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 text-xs text-slate-500">
-                          {b.program_name_snapshot || 'General'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="text-sm">
-                        <p className="text-white font-semibold">₹{Number(b.total_amount).toLocaleString('en-IN')}</p>
-                        {Number(b.remaining_amount) > 0 ? (
-                          <p className="text-[10px] text-amber-500 font-semibold mt-0.5">
-                            ₹{Number(b.remaining_amount).toLocaleString('en-IN')} due
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Paid In Full</p>
                         )}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                        b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                        b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                        'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}>
-                        {b.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5 animate-none">
-                        <button
-                          onClick={() => {
-                            toast.promise(
-                              downloadBookingPDF(b as any, profile),
-                              {
-                                loading: 'Generating PDF Invoice...',
-                                success: 'PDF Invoice downloaded successfully!',
-                                error: 'Failed to generate PDF'
-                              }
-                            )
-                          }}
-                          title="Download PDF Invoice"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          <FileDown size={14} className="text-indigo-400" />
-                        </button>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="text-sm">
+                          <p className="text-white font-semibold">₹{Number(b.total_amount).toLocaleString('en-IN')}</p>
+                          {Number(b.remaining_amount) > 0 ? (
+                            <p className="text-[10px] text-amber-500 font-semibold mt-0.5">
+                              ₹{Number(b.remaining_amount).toLocaleString('en-IN')} due
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Paid In Full</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                          b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                          'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }`}>
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 animate-none">
+                          <button
+                            onClick={() => {
+                              toast.promise(
+                                downloadBookingPDF(b as any, profile),
+                                {
+                                  loading: 'Generating PDF Invoice...',
+                                  success: 'PDF Invoice downloaded successfully!',
+                                  error: 'Failed to generate PDF'
+                                }
+                              )
+                            }}
+                            title="Download PDF Invoice"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <FileDown size={14} className="text-indigo-400" />
+                          </button>
 
-                        <button
-                          onClick={() => handleShareWhatsApp(b)}
-                          title="Share Booking via WhatsApp"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-emerald-950/30 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          <Share2 size={14} className="text-emerald-450" />
-                        </button>
+                          <button
+                            onClick={() => handleShareWhatsApp(b)}
+                            title="Share Booking via WhatsApp"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-emerald-950/30 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <Share2 size={14} className="text-emerald-450" />
+                          </button>
 
-                        <button
-                          onClick={() => handleOpenEdit(b)}
-                          title="Edit booking"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(b.id)}
-                          title="Delete booking"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-850 text-slate-400 hover:text-rose-450 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          <button
+                            onClick={() => handleOpenEdit(b)}
+                            title="Edit booking"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(b.id)}
+                            title="Delete booking"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-850 text-slate-400 hover:text-rose-450 transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* MOBILE CARD VIEW (REPLACE TABLE COMPLETELY ON MOBILE) */}
+          <div className="block md:hidden space-y-4">
+            {filteredBookings.map((b) => (
+              <div key={b.id} className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 shadow-lg w-full">
+                {/* 1. Client Name & Phone Number */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base shrink-0 mt-0.5" role="img" aria-label="client">👤</span>
+                    <h4 className="text-base font-bold text-white leading-snug break-words">{b.customer_name}</h4>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-400 text-sm break-all">
+                    <span className="text-base shrink-0" role="img" aria-label="phone">📞</span>
+                    <span>{b.mobile_number}</span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* 2. Event Date & Event Time */}
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="text-base shrink-0" role="img" aria-label="date">📅</span>
+                    <span className="text-sm font-medium break-words leading-relaxed">
+                      {formatIndianDate(b.event_date)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="text-base shrink-0" role="img" aria-label="time">🕒</span>
+                    <span className="text-sm break-words leading-relaxed">
+                      {b.start_time && b.end_time 
+                        ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
+                        : 'Time unspecified'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* 3. Service Package */}
+                <div className="flex items-center gap-2 text-slate-300">
+                  <span className="text-base shrink-0" role="img" aria-label="music">🎵</span>
+                  <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider shrink-0">Package:</span>
+                  <span className="inline-block px-3 py-1 bg-slate-950/60 rounded-xl border border-slate-800 text-sm font-medium text-indigo-400 break-words">
+                    {b.program_name_snapshot || 'General'}
+                  </span>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* 4. Location */}
+                <div className="flex items-start gap-2 text-slate-300">
+                  <span className="text-base shrink-0 mt-0.5" role="img" aria-label="location">📍</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider block mb-1">Venue Location:</span>
+                    <p className="text-sm break-words leading-relaxed text-slate-350 bg-slate-950/20 p-3 rounded-xl border border-slate-800/40">
+                      {b.venue_address || 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* Billing Summary Box */}
+                <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                  <div>
+                    <span className="text-xs text-slate-500 font-semibold uppercase block">Total Bill</span>
+                    <span className="text-white font-bold text-sm mt-0.5">₹{Number(b.total_amount).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-500 font-semibold uppercase block">Balance</span>
+                    {Number(b.remaining_amount) > 0 ? (
+                      <span className="text-amber-400 font-bold text-sm mt-0.5 block">₹{Number(b.remaining_amount).toLocaleString('en-IN')} due</span>
+                    ) : (
+                      <span className="text-emerald-400 font-bold text-sm mt-0.5 block font-semibold">Paid In Full</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* 5. Status Badge */}
+                <div className="flex items-center gap-2">
+                  <span className="text-base shrink-0" role="img" aria-label="status">🏷️</span>
+                  <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider shrink-0">Status:</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+                    b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                    b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                    b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                    'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  }`}>
+                    {b.status}
+                  </span>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-850" />
+
+                {/* 6. Action buttons at bottom */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  {/* Left grouped edit, view, delete */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewBooking(b)}
+                      title="View details"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
+                    >
+                      <Eye size={16} />
+                      <span>View</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenEdit(b)}
+                      title="Edit booking"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
+                    >
+                      <Edit2 size={16} className="text-slate-400" />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(b.id)}
+                      title="Delete booking"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-450 hover:text-rose-450 transition-colors cursor-pointer text-sm font-semibold animate-none"
+                    >
+                      <Trash2 size={16} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+
+                  {/* Right grouped PDF invoice & WhatsApp share */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        toast.promise(
+                          downloadBookingPDF(b as any, profile),
+                          {
+                            loading: 'Generating PDF...',
+                            success: 'PDF downloaded!',
+                            error: 'Failed to generate PDF'
+                          }
+                        )
+                      }}
+                      title="Download PDF Invoice"
+                      className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
+                    >
+                      <FileDown size={16} className="text-indigo-400" />
+                    </button>
+
+                    <button
+                      onClick={() => handleShareWhatsApp(b)}
+                      title="Share via WhatsApp"
+                      className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-emerald-950/20 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
+                    >
+                      <Share2 size={16} className="text-emerald-450" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* VIEW BOOKING DETAIL MODAL OVERLAY */}
+      {viewBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto py-8 select-none">
+          <div className="bg-slate-900 border border-slate-800/80 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
+              <h3 className="font-bold text-lg text-white">Event Booking Details</h3>
+              <button
+                onClick={() => setViewBooking(null)}
+                className="p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto text-sm">
+              {/* Client Info */}
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 uppercase font-semibold">Client Name</span>
+                <p className="text-white text-base font-bold">{viewBooking.customer_name}</p>
+                <p className="text-slate-400 font-medium">{viewBooking.mobile_number}</p>
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase font-semibold block mb-1">Event Date</span>
+                  <p className="text-slate-200 font-medium">{formatIndianDate(viewBooking.event_date)}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 uppercase font-semibold block mb-1">Event Time</span>
+                  <p className="text-slate-200 font-medium">
+                    {viewBooking.start_time && viewBooking.end_time
+                      ? `${format12HourTime(viewBooking.start_time)} - ${format12HourTime(viewBooking.end_time)}`
+                      : 'Time unspecified'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Package & Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase font-semibold block mb-1">Service Package</span>
+                  <span className="inline-block px-2.5 py-0.5 bg-slate-950/50 rounded border border-slate-850 text-indigo-400 font-semibold text-xs">
+                    {viewBooking.program_name_snapshot || 'General'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 uppercase font-semibold block mb-1">Status</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                    viewBooking.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                    viewBooking.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                    viewBooking.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                    'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  }`}>
+                    {viewBooking.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Venue Address */}
+              {viewBooking.venue_address && (
+                <div className="space-y-1">
+                  <span className="text-xs text-slate-500 uppercase font-semibold">Location / Venue Address</span>
+                  <p className="text-slate-300 leading-relaxed break-words">{viewBooking.venue_address}</p>
+                </div>
+              )}
+
+              {/* Billing Info */}
+              <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Total Price</span>
+                  <p className="text-white font-bold text-sm mt-0.5">₹{Number(viewBooking.total_amount).toLocaleString('en-IN')}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Paid Advance</span>
+                  <p className="text-emerald-400 font-bold text-sm mt-0.5">₹{Number(viewBooking.advance_amount).toLocaleString('en-IN')}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Remaining Due</span>
+                  <p className="text-amber-400 font-bold text-sm mt-0.5">₹{Number(viewBooking.remaining_amount).toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+
+              {/* Special Notes */}
+              {viewBooking.notes && (
+                <div className="space-y-1">
+                  <span className="text-xs text-slate-500 uppercase font-semibold">Notes / Special Instructions</span>
+                  <p className="text-slate-400 leading-relaxed bg-slate-950/20 p-3 rounded-lg border border-slate-850 break-words">{viewBooking.notes}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="h-16 border-t border-slate-800 px-6 flex items-center justify-end bg-slate-950/20">
+              <button
+                onClick={() => setViewBooking(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors text-sm cursor-pointer"
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </div>
       )}

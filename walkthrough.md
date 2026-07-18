@@ -26,9 +26,12 @@ Here is a summary of all optimizations applied across the Smart Booking Pro code
 - **File**: [`app/(dashboard)/bookings/page.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/app/(dashboard)/bookings/page.tsx)
 - **Change**:
   - Parallelized `bookings`, `programs`, and `profiles` database fetches.
-  - Shifted booking time/date conflict checks from database queries to an in-memory check over the synced bookings array, preventing database requests during keyboard input.
-  - Statically imported `xlsx` replaced with an on-demand dynamic import in `handleExportExcel`.
+  - Shifted booking time/date conflict checks from database queries to an in-memory check over the synced bookings array.
+  - Statically imported `xlsx` replaced with an on-demand dynamic import.
   - Filter computation for bookings search memoized using `useMemo`.
+  - Separated the bookings list into two distinct, isolated layouts. On desktop (`md` and above), the existing table is rendered exactly as is. On mobile (below `md`), the table is not rendered at all; instead, it renders a completely separate component using modern glass-style booking cards.
+  - The cards stack elements vertically with emoji indicators (👤 Client Name, 📞 Phone Number, 📅 Event Date, 🕒 Event Time, 🎵 Service Package, 📍 Location, 🏷️ Status Badge) in the exact requested hierarchy. Font size is minimum 14px, card padding is 16px, and long text automatically wraps.
+  - Added an interactive read-only `👁️ View` details modal overlay and kept all edit/view/delete actions aligned at the bottom of the card. No horizontal scrolling occurs at all on mobile.
 
 ### 3. Calendar Scheduler
 - **File**: [`app/(dashboard)/calendar/page.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/app/(dashboard)/calendar/page.tsx)
@@ -73,4 +76,4 @@ Here is a summary of all optimizations applied across the Smart Booking Pro code
 
 ## 📈 Verification Status
 - **ESLint Linter**: Passed with 0 errors (`npx eslint app`).
-- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 25.2s with 0 errors.
+- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 25.8s with 0 errors.
