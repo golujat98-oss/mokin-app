@@ -14,7 +14,9 @@ import {
   MapPin,
   ExternalLink,
   ChevronRightSquare,
-  Edit2
+  Edit2,
+  Phone,
+  Share2
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
@@ -31,6 +33,31 @@ interface Booking {
   program_name_snapshot: string | null
   status: string
   remaining_amount: number
+  total_amount: number
+  advance_amount: number
+}
+
+const formatIndianDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  const year = parseInt(parts[0], 10)
+  const monthIdx = parseInt(parts[1], 10) - 1
+  const day = parseInt(parts[2], 10)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${day} ${months[monthIdx]} ${year}`
+}
+
+const format12HourTime = (timeStr: string | null | undefined) => {
+  if (!timeStr) return ''
+  const parts = timeStr.split(':')
+  if (parts.length < 2) return timeStr
+  let hour = parseInt(parts[0], 10)
+  const minute = parts[1]
+  const period = hour >= 12 ? 'PM' : 'AM'
+  if (hour > 12) hour -= 12
+  if (hour === 0) hour = 12
+  return `${hour}:${minute} ${period}`
 }
 
 export default function CalendarPage() {
@@ -54,7 +81,7 @@ export default function CalendarPage() {
 
       const { data, error } = await supabase
         .from('bookings')
-        .select('id, customer_name, mobile_number, event_date, start_time, end_time, venue_address, program_name_snapshot, status, remaining_amount')
+        .select('id, customer_name, mobile_number, event_date, start_time, end_time, venue_address, program_name_snapshot, status, remaining_amount, total_amount, advance_amount')
         .gte('event_date', startOfView)
         .lte('event_date', endOfView)
         .neq('status', 'cancelled')
@@ -186,6 +213,14 @@ export default function CalendarPage() {
     gridCells.push({ day, isCurrentMonth: false, dateStr: dStr })
   }
 
+  const todayStr = useMemo(() => {
+    const today = new Date()
+    const y = today.getFullYear()
+    const m = String(today.getMonth() + 1).padStart(2, '0')
+    const d = String(today.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }, [])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
@@ -204,14 +239,14 @@ export default function CalendarPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <CalendarIcon className="text-indigo-500" />
+            <CalendarIcon className="text-purple-500 shadow-sm" />
             Smart Scheduler
           </h1>
           <p className="text-slate-400 text-sm mt-1">Monthly calendar view with automatic booking overlap detection and schedule markers.</p>
         </div>
         <div>
           <Link href="/bookings?new=true">
-            <span className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-indigo-600/15 active:scale-95 cursor-pointer">
+            <span className="flex items-center bg-purple-650 hover:bg-purple-700 text-white font-semibold text-sm px-4.5 py-2.5 rounded-xl transition-all shadow-lg shadow-purple-650/15 active:scale-95 cursor-pointer hover:shadow-purple-650/25">
               <Plus size={16} className="mr-2" /> New Booking
             </span>
           </Link>
@@ -219,25 +254,33 @@ export default function CalendarPage() {
       </div>
 
       {/* MAIN CONTAINER */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="w-full">
         
-        {/* CALENDAR COLUMN */}
-        <div className="lg:col-span-3 bg-slate-900/30 backdrop-blur-md border border-slate-900 p-6 rounded-2xl flex flex-col shadow-xl">
+        {/* CALENDAR COLUMN (FULL-WIDTH) */}
+        <div className="w-full bg-slate-900/40 backdrop-blur-xl border border-slate-850 p-6 rounded-[24px] flex flex-col shadow-2xl shadow-indigo-950/20 ring-1 ring-white/5 relative overflow-hidden">
+          {/* Soft purple glow accents */}
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-600/10 blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-indigo-600/10 blur-[100px] pointer-events-none" />
+
           {/* Calendar Header Navigation */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white tracking-wide">
-              {months[month]} <span className="text-indigo-400 font-normal">{year}</span>
-            </h2>
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <div>
+              <h2 className="text-xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                {months[month]} <span className="text-purple-400 font-semibold">{year}</span>
+              </h2>
+              <p className="text-slate-500 text-[11px] font-medium mt-0.5">Manage and view monthly events</p>
+            </div>
+            
             <div className="flex gap-2">
               <button
                 onClick={handlePrevMonth}
-                className="p-2 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-450 hover:text-white transition-colors cursor-pointer bg-slate-950/20"
+                className="p-2.5 rounded-full border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all duration-150 cursor-pointer bg-slate-950/40 hover:bg-slate-900 active:scale-90"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={handleNextMonth}
-                className="p-2 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-450 hover:text-white transition-colors cursor-pointer bg-slate-950/20"
+                className="p-2.5 rounded-full border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all duration-150 cursor-pointer bg-slate-950/40 hover:bg-slate-900 active:scale-90"
               >
                 <ChevronRight size={16} />
               </button>
@@ -245,54 +288,78 @@ export default function CalendarPage() {
           </div>
 
           {/* DAYS OF WEEK GRID */}
-          <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-550 uppercase tracking-wider relative z-10">
             {daysOfWeek.map((day) => (
               <div key={day} className="py-2">{day}</div>
             ))}
           </div>
 
           {/* CALENDAR CELLS GRID */}
-          <div className="grid grid-cols-7 gap-2 flex-1 min-h-[350px]">
+          <div className="grid grid-cols-7 gap-2 flex-1 min-h-[350px] relative z-10">
             {gridCells.map((cell, idx) => {
-              // Get day bookings from precomputed map
               const dayBookings = bookingsByDate[cell.dateStr] || []
               const hasBookings = dayBookings.length > 0
               const hasOverlaps = overlapsByDate[cell.dateStr] || false
               const isSelected = selectedDayStr === cell.dateStr
+              const isToday = cell.dateStr === todayStr
+
+              let cellStyle = `relative rounded-xl p-2.5 flex flex-col justify-between min-h-[72px] select-none transition-all duration-200 ease-out border text-left `
+
+              if (!cell.isCurrentMonth) {
+                cellStyle += `bg-slate-950/5 border-transparent text-slate-750 opacity-20 cursor-default`
+              } else if (isSelected) {
+                cellStyle += `bg-gradient-to-tr from-purple-650 to-indigo-650 border-transparent text-white shadow-lg shadow-purple-500/25 hover:scale-[1.04] active:scale-95 cursor-pointer`
+              } else {
+                cellStyle += `bg-slate-950/30 border-slate-900/60 text-slate-350 hover:border-slate-800 hover:bg-slate-900/10 hover:scale-[1.04] active:scale-95 cursor-pointer `
+                
+                if (isToday) {
+                  cellStyle += `ring-2 ring-purple-500/80 shadow-[0_0_15px_-3px_rgba(168,85,247,0.5)] border-transparent bg-purple-500/5 `
+                } else if (hasOverlaps) {
+                  cellStyle += `bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40 `
+                }
+              }
 
               return (
                 <button
                   key={idx}
                   onClick={() => cell.isCurrentMonth && handleSelectDay(cell.dateStr, dayBookings)}
                   disabled={!cell.isCurrentMonth}
-                  className={`relative rounded-xl p-2.5 flex flex-col items-start min-h-[70px] select-none transition-all duration-150 border text-left ${
-                    !cell.isCurrentMonth
-                      ? 'bg-slate-950/10 border-transparent text-slate-700 opacity-40'
-                      : isSelected
-                      ? 'bg-indigo-500/10 border-indigo-500 text-white shadow-lg shadow-indigo-500/5'
-                      : hasOverlaps
-                      ? 'bg-amber-500/5 border-amber-500/20 text-white hover:border-amber-500/40'
-                      : 'bg-slate-950/30 border-slate-900 text-slate-300 hover:border-slate-850 hover:bg-slate-900/10'
-                  } ${cell.isCurrentMonth ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                  className={cellStyle}
                 >
-                  <span className={`text-xs font-bold ${
-                    !cell.isCurrentMonth ? '' : isSelected ? 'text-indigo-400' : hasOverlaps ? 'text-amber-500' : 'text-slate-400'
-                  }`}>
-                    {cell.day}
-                  </span>
+                  <div className="flex justify-between items-center w-full">
+                    <span className={`text-xs font-extrabold ${
+                      !cell.isCurrentMonth ? '' : isSelected ? 'text-white' : isToday ? 'text-purple-400' : hasOverlaps ? 'text-amber-500' : 'text-slate-400'
+                    }`}>
+                      {cell.day}
+                    </span>
+                    {cell.isCurrentMonth && dayBookings.length > 1 && (
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-purple-500/20 text-purple-450 border border-purple-500/30'
+                      }`}>
+                        {dayBookings.length}
+                      </span>
+                    )}
+                  </div>
 
-                  {/* Booking count dot indicators */}
                   {cell.isCurrentMonth && hasBookings && (
-                    <div className="mt-auto flex flex-col gap-1 w-full">
-                      {/* overlap warning badge */}
-                      {hasOverlaps ? (
-                        <span className="flex items-center text-[9px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/15 w-full truncate">
-                          <AlertTriangle size={8} className="mr-1 shrink-0" /> Overlap
-                        </span>
-                      ) : (
-                        <span className="text-[9px] text-slate-400 bg-slate-950/50 border border-slate-900 px-1.5 py-0.5 rounded w-full truncate">
-                          {dayBookings.length} {dayBookings.length === 1 ? 'Booking' : 'Bookings'}
-                        </span>
+                    <div className="mt-auto flex gap-1 items-center justify-start flex-wrap max-w-full">
+                      {dayBookings.slice(0, 3).map((b) => {
+                        let dotColor = 'bg-slate-500'
+                        if (b.status === 'confirmed') dotColor = 'bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]'
+                        else if (b.status === 'pending') dotColor = 'bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]'
+                        else if (b.status === 'completed') dotColor = 'bg-indigo-500 shadow-[0_0_4px_rgba(99,102,241,0.5)]'
+                        else if (b.status === 'cancelled') dotColor = 'bg-rose-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]'
+                        
+                        return (
+                          <span
+                            key={b.id}
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`}
+                            title={`${b.customer_name} (${b.status})`}
+                          />
+                        )
+                      })}
+                      {dayBookings.length > 3 && (
+                        <span className="text-[7px] text-slate-550 font-black leading-none shrink-0">+</span>
                       )}
                     </div>
                   )}
@@ -302,39 +369,36 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* SELECTED DAY DETAILS COL */}
-        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900 p-6 rounded-2xl flex flex-col shadow-xl min-h-[300px]">
-          {selectedDayStr ? (
-            <>
-              {/* Header Details */}
-              <div className="mb-6 flex justify-between items-start">
+      </div>
+
+      {/* SELECTED DAY DETAILS OVERLAY POPUP MODAL */}
+      <AnimatePresence>
+        {selectedDayStr && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-auto relative z-50 ring-1 ring-white/10"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800 bg-slate-950/40">
                 <div>
-                  <h3 className="text-lg font-bold text-white tracking-wide">
-                    {new Date(selectedDayStr).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                  </h3>
-                  <p className="text-slate-400 text-xs mt-0.5">{selectedBookings.length} Bookings active</p>
+                  <h3 className="font-extrabold text-xl text-white tracking-tight">Event Schedule Details</h3>
+                  <p className="text-xs text-purple-400 font-semibold mt-1">
+                    📅 {formatIndianDate(selectedDayStr)} • {selectedBookings.length} active slot{selectedBookings.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
                 <button
                   onClick={() => setSelectedDayStr(null)}
-                  className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors"
+                  className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
               </div>
 
-              {/* Overlap Alarm */}
-              {checkDayOverlaps(selectedBookings) && (
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-2.5 text-amber-400 mb-6">
-                  <AlertTriangle className="shrink-0 mt-0.5" size={16} />
-                  <div className="text-[10px]">
-                    <p className="font-bold">Schedule Overlap Alert</p>
-                    <p className="mt-0.5 text-slate-350">Two or more events have overlapping times. Check details below to avoid conflict issues.</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Detail List */}
-              <div className="flex-1 space-y-4 overflow-y-auto max-h-[350px] pr-1">
+              {/* Scrollable Modal Content */}
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto font-sans">
                 {selectedBookings.length === 0 ? (
                   <div className="text-center py-16 text-slate-500 flex flex-col items-center">
                     <Clock size={32} className="text-slate-700 stroke-[1.5] mb-2" />
@@ -346,55 +410,150 @@ export default function CalendarPage() {
                     </Link>
                   </div>
                 ) : (
-                  selectedBookings.map((b) => (
-                    <div
-                      key={b.id}
-                      className="p-4 bg-slate-950/40 border border-slate-900 rounded-xl hover:border-slate-800 transition-all flex flex-col gap-2.5"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="text-sm font-bold text-white">{b.customer_name}</h4>
-                          <span className="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/15 rounded text-[9px] text-indigo-400 font-semibold inline-block mt-1">
-                            {b.program_name_snapshot || 'General Service'}
+                  selectedBookings.map((b) => {
+                    const cleanedMobile = b.mobile_number.replace(/\D/g, '')
+                    const phoneLink = `tel:${cleanedMobile}`
+                    const whatsappLink = `https://wa.me/${cleanedMobile.length === 10 ? '91' + cleanedMobile : cleanedMobile}`
+                    const mapsLink = b.venue_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.venue_address)}` : null
+                    const initials = b.customer_name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase() || '👤'
+
+                    const isPaid = Number(b.remaining_amount) === 0
+
+                    return (
+                      <div key={b.id} className="bg-slate-955/40 border border-slate-850 rounded-2xl overflow-hidden shadow-lg p-5 space-y-6 relative">
+                        {/* Top Hero Section */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-900">
+                          <div>
+                            <h4 className="text-lg font-bold text-white tracking-tight">{b.program_name_snapshot || 'General Event'}</h4>
+                            <p className="text-xs text-slate-400 mt-0.5">{formatIndianDate(b.event_date)}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto tracking-wide uppercase ${
+                            b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' :
+                            b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border border-amber-500/20' :
+                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                            'bg-rose-500/10 text-rose-455 border border-rose-500/20'
+                          }`}>
+                            {b.status}
                           </span>
                         </div>
-                        <Link href={`/bookings?edit=${b.id}`}>
-                          <span className="p-1.5 rounded bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white transition-colors cursor-pointer">
-                            <Edit2 size={12} />
-                          </span>
-                        </Link>
-                      </div>
 
-                      {/* Time & Venue */}
-                      <div className="space-y-1.5 text-xs text-slate-400 border-t border-slate-900 pt-2.5">
-                        {b.start_time && b.end_time && (
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={12} className="text-slate-500" />
-                            <span>{b.start_time.substring(0, 5)} - {b.end_time.substring(0, 5)}</span>
+                        {/* Customer & Actions Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Customer Info Box */}
+                          <div className="space-y-3">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Customer Details</span>
+                            <div className="flex items-center gap-3.5 bg-slate-955/35 p-3 rounded-xl border border-slate-900/60">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-650 to-indigo-650 flex items-center justify-center text-white font-extrabold text-xs shadow-md">
+                                {initials}
+                              </div>
+                              <div className="min-w-0">
+                                <h5 className="text-sm font-bold text-white truncate">{b.customer_name}</h5>
+                                <p className="text-xs text-slate-400 truncate">{b.mobile_number}</p>
+                              </div>
+                            </div>
+                            {/* Call and WhatsApp buttons */}
+                            <div className="flex gap-2.5">
+                              <a
+                                href={phoneLink}
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 hover:text-white transition-colors text-xs font-semibold active:scale-95"
+                              >
+                                <Phone size={12} className="text-indigo-400" /> Call Client
+                              </a>
+                              <a
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-350 hover:text-white transition-colors text-xs font-semibold active:scale-95"
+                              >
+                                <Share2 size={12} className="text-emerald-400" /> WhatsApp
+                              </a>
+                            </div>
                           </div>
-                        )}
-                        {b.venue_address && (
-                          <div className="flex items-start gap-1.5">
-                            <MapPin size={12} className="text-slate-500 shrink-0 mt-0.5" />
-                            <span className="truncate max-w-[180px]">{b.venue_address}</span>
+
+                          {/* Event details */}
+                          <div className="space-y-3">
+                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Event Schedule</span>
+                            <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-900/60 text-xs space-y-2 text-slate-300">
+                              <div className="flex items-center gap-2">
+                                <Clock size={12} className="text-slate-505 animate-pulse" />
+                                <span>
+                                  {b.start_time && b.end_time
+                                    ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
+                                    : 'Time unspecified'}
+                                </span>
+                              </div>
+                              {b.venue_address ? (
+                                <div className="flex items-start gap-2">
+                                  <MapPin size={12} className="text-slate-500 mt-0.5 shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="truncate max-w-[220px]" title={b.venue_address}>{b.venue_address}</p>
+                                    {mapsLink && (
+                                      <a
+                                        href={mapsLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-350 inline-flex items-center mt-1"
+                                      >
+                                        Navigate <ExternalLink size={10} className="ml-0.5" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-slate-550">No venue address provided</div>
+                              )}
+                            </div>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Payment Status Box */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Breakdown</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${isPaid ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-450 border border-amber-500/20'}`}>
+                              {isPaid ? 'PAID' : 'DUE'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Total</p>
+                              <p className="text-sm font-bold text-white mt-1">₹{Number(b.total_amount).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Advance</p>
+                              <p className="text-sm font-bold text-white mt-1">₹{Number(b.advance_amount).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Balance</p>
+                              <p className={`text-sm font-black mt-1 ${isPaid ? 'text-emerald-400' : 'text-amber-450'}`}>
+                                ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions Section */}
+                        <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
+                          <Link href={`/bookings?edit=${b.id}`}>
+                            <span className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 hover:border-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95">
+                              <Edit2 size={12} /> Edit Booking
+                            </span>
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 text-center py-20">
-              <CalendarIcon className="stroke-[1.5] h-10 w-10 text-slate-700 mb-3 animate-pulse" />
-              <h3 className="text-sm font-bold text-white">Select a Date</h3>
-              <p className="text-xs text-slate-400 mt-1 max-w-[180px] mx-auto">Click any highlighted date inside the grid to preview events list.</p>
-            </div>
-          )}
-        </div>
-
-      </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
