@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   CircleDollarSign,
@@ -58,7 +58,7 @@ export default function ExpensesPage() {
     try {
       const { data, error } = await supabase
         .from('expenses')
-        .select('*')
+        .select('id, description, category, amount, expense_date, created_at')
         .order('expense_date', { ascending: false })
 
       if (error) throw error
@@ -172,24 +172,49 @@ export default function ExpensesPage() {
     }
   }
 
-  // Calculate metrics for current month
-  const currentMonthExpenses = expenses.filter((e) => {
-    const d = new Date(e.expense_date)
+  // Calculate metrics for current month memoized
+  const { totalMonthlyOutflow, wagesOutflow, dieselOutflow, maintenanceOutflow } = useMemo(() => {
     const now = new Date()
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  })
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
 
-  const totalMonthlyOutflow = currentMonthExpenses.reduce((acc, curr) => acc + curr.amount, 0)
-  const wagesOutflow = currentMonthExpenses.filter(x => x.category === 'Helper Wages').reduce((acc, curr) => acc + curr.amount, 0)
-  const dieselOutflow = currentMonthExpenses.filter(x => x.category === 'Diesel & Transport').reduce((acc, curr) => acc + curr.amount, 0)
-  const maintenanceOutflow = currentMonthExpenses.filter(x => x.category === 'Maintenance & Repairs').reduce((acc, curr) => acc + curr.amount, 0)
+    const current = expenses.filter((e) => {
+      const d = new Date(e.expense_date)
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+    })
 
-  // Filtering list
-  const filteredExpenses = expenses.filter((e) => {
-    const matchesSearch = e.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === 'all' || e.category === categoryFilter
-    return matchesSearch && matchesCategory
-  })
+    let total = 0
+    let wages = 0
+    let diesel = 0
+    let maintenance = 0
+
+    current.forEach((e) => {
+      total += e.amount
+      if (e.category === 'Helper Wages') {
+        wages += e.amount
+      } else if (e.category === 'Diesel & Transport') {
+        diesel += e.amount
+      } else if (e.category === 'Maintenance & Repairs') {
+        maintenance += e.amount
+      }
+    })
+
+    return {
+      totalMonthlyOutflow: total,
+      wagesOutflow: wages,
+      dieselOutflow: diesel,
+      maintenanceOutflow: maintenance
+    }
+  }, [expenses])
+
+  // Filtering list memoized
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((e) => {
+      const matchesSearch = e.description.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesCategory = categoryFilter === 'all' || e.category === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [expenses, searchTerm, categoryFilter])
 
   const renderCategoryIcon = (catVal: string, size = 16, className = '') => {
     const cat = expenseCategories.find(c => c.val === catVal)

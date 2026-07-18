@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -21,8 +21,8 @@ import {
   Share2
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
-import * as XLSX from 'xlsx'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
+
 
 interface Booking {
   id: string
@@ -170,22 +170,28 @@ export default function BookingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Bookings query
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select('*')
+      // Run bookings, programs, and profile queries in parallel with explicit column selections
+      const [bookingsRes, programsRes, profileRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id, customer_name, mobile_number, program_id, program_name_snapshot, event_date, start_time, end_time, venue_address, maps_link, guest_count, total_amount, advance_amount, remaining_amount, status, notes, created_at'),
+        supabase
+          .from('programs')
+          .select('id, name'),
+        supabase
+          .from('profiles')
+          .select('business_name, business_address, gst_number')
+          .eq('id', user.id)
+          .maybeSingle()
+      ])
 
-      // Programs dropdown options
-      const { data: programsData } = await supabase
-        .from('programs')
-        .select('id, name')
+      if (bookingsRes.error) throw bookingsRes.error
+      if (programsRes.error) throw programsRes.error
 
-      // Profile details
-      let { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('business_name, business_address, gst_number')
-        .eq('id', user.id)
-        .maybeSingle()
+      const bookingsData = bookingsRes.data || []
+      const programsData = programsRes.data || []
+      let profileData = profileRes.data
+      const profileError = profileRes.error
 
       if (!profileData && !profileError) {
         const defaultBusinessName = user.user_metadata?.business_name || 'My Business'
@@ -261,21 +267,18 @@ export default function BookingsPage() {
     }
   }, [fetchData, supabase])
 
-  // 2. Real-time Conflict checking logic
-  const checkConflicts = useCallback(async (date: string, start: string, end: string, excludeId?: string | null) => {
+  // 2. Real-time Conflict checking logic (completely client-side using in-memory state)
+  const checkConflicts = useCallback((date: string, start: string, end: string, excludeId?: string | null) => {
     if (!date) {
       setHasConflict(false)
       setConflictDetails(null)
       return
     }
 
-    const { data: matches } = await supabase
-      .from('bookings')
-      .select('id, customer_name, start_time, end_time')
-      .eq('event_date', date)
-      .neq('status', 'cancelled')
+    // Filter local bookings for the same date (excluding cancelled ones)
+    const matches = bookings.filter((b) => b.event_date === date && b.status !== 'cancelled')
 
-    if (!matches || matches.length === 0) {
+    if (matches.length === 0) {
       setHasConflict(false)
       setConflictDetails(null)
       return
@@ -299,7 +302,7 @@ export default function BookingsPage() {
       setHasConflict(false)
       setConflictDetails(null)
     }
-  }, [supabase])
+  }, [bookings])
 
   // Conflict monitoring hook
   useEffect(() => {
@@ -518,33 +521,40 @@ export default function BookingsPage() {
   }
 
   // Excel spreadsheet exporter
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (bookings.length === 0) {
       toast.error('No booking records to export')
       return
     }
 
-    const data = bookings.map((b) => ({
-      'Client Name': b.customer_name,
-      'Mobile Number': b.mobile_number,
-      'Service / Program': b.program_name_snapshot || 'General',
-      'Event Date': formatIndianDate(b.event_date),
-      'Start Time': b.start_time ? format12HourTime(b.start_time) : '',
-      'End Time': b.end_time ? format12HourTime(b.end_time) : '',
-      'Venue Address': b.venue_address || '',
-      'Guest Count': b.guest_count || '',
-      'Total Price (INR)': b.total_amount,
-      'Advance Paid (INR)': b.advance_amount,
-      'Balance Dues (INR)': b.remaining_amount,
-      'Booking Status': b.status,
-      'Notes': b.notes || ''
-    }))
+    try {
+      const XLSX = await import('xlsx')
 
-    const ws = XLSX.utils.json_to_sheet(data)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Bookings')
-    XLSX.writeFile(wb, `Mookin_Bookings_${new Date().toISOString().split('T')[0]}.xlsx`)
-    toast.success('Excel spreadsheet generated!')
+      const data = bookings.map((b) => ({
+        'Client Name': b.customer_name,
+        'Mobile Number': b.mobile_number,
+        'Service / Program': b.program_name_snapshot || 'General',
+        'Event Date': formatIndianDate(b.event_date),
+        'Start Time': b.start_time ? format12HourTime(b.start_time) : '',
+        'End Time': b.end_time ? format12HourTime(b.end_time) : '',
+        'Venue Address': b.venue_address || '',
+        'Guest Count': b.guest_count || '',
+        'Total Price (INR)': b.total_amount,
+        'Advance Paid (INR)': b.advance_amount,
+        'Balance Dues (INR)': b.remaining_amount,
+        'Booking Status': b.status,
+        'Notes': b.notes || ''
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(data)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Bookings')
+      XLSX.writeFile(wb, `Mookin_Bookings_${new Date().toISOString().split('T')[0]}.xlsx`)
+      toast.success('Excel spreadsheet generated!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to generate Excel spreadsheet')
+    }
   }
 
   // WhatsApp Share receipt formatter
@@ -584,17 +594,19 @@ export default function BookingsPage() {
     window.open(url, '_blank')
   }
 
-  // Filter computation
-  const filteredBookings = bookings.filter((b) => {
-    const matchesSearch =
-      b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.mobile_number.includes(searchTerm)
-    
-    const matchesStatus =
-      statusFilter === 'all' || b.status === statusFilter
+  // Filter computation memoized
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b) => {
+      const matchesSearch =
+        b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.mobile_number.includes(searchTerm)
+      
+      const matchesStatus =
+        statusFilter === 'all' || b.status === statusFilter
 
-    return matchesSearch && matchesStatus
-  })
+      return matchesSearch && matchesStatus
+    })
+  }, [bookings, searchTerm, statusFilter])
 
   if (loading) {
     return (

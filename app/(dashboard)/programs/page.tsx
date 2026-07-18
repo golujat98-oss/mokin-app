@@ -62,7 +62,7 @@ export default function ProgramsPage() {
     try {
       const { data, error } = await supabase
         .from('programs')
-        .select('*')
+        .select('id, name, icon, created_at')
         .order('created_at', { ascending: false })
 
       if (error) throw error

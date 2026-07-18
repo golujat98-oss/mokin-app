@@ -38,11 +38,13 @@ export default function SettingsPage() {
           return
         }
 
-        let { data: profile, error } = await supabase
+        let profile;
+        const { data, error } = await supabase
           .from('profiles')
           .select('business_name, business_address, gst_number, quick_lock_pin')
           .eq('id', user.id)
           .maybeSingle()
+        profile = data
 
         if (!profile && !error) {
           const defaultBusinessName = user.user_metadata?.business_name || 'My Business'

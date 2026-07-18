@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Calendar as CalendarIcon,
@@ -54,7 +54,7 @@ export default function CalendarPage() {
 
       const { data, error } = await supabase
         .from('bookings')
-        .select('*')
+        .select('id, customer_name, mobile_number, event_date, start_time, end_time, venue_address, program_name_snapshot, status, remaining_amount')
         .gte('event_date', startOfView)
         .lte('event_date', endOfView)
         .neq('status', 'cancelled')
@@ -129,6 +129,27 @@ export default function CalendarPage() {
     }
     return false
   }
+
+  // Precompute map of dateStr -> bookings for fast lookup
+  const bookingsByDate = useMemo(() => {
+    const map: Record<string, Booking[]> = {}
+    bookings.forEach((b) => {
+      if (!map[b.event_date]) {
+        map[b.event_date] = []
+      }
+      map[b.event_date].push(b)
+    })
+    return map
+  }, [bookings])
+
+  // Precompute map of dateStr -> hasOverlaps
+  const overlapsByDate = useMemo(() => {
+    const map: Record<string, boolean> = {}
+    Object.entries(bookingsByDate).forEach(([dateStr, dayBookings]) => {
+      map[dateStr] = checkDayOverlaps(dayBookings)
+    })
+    return map
+  }, [bookingsByDate])
 
   // Calendar render constants
   const months = [
@@ -232,10 +253,10 @@ export default function CalendarPage() {
           {/* CALENDAR CELLS GRID */}
           <div className="grid grid-cols-7 gap-2 flex-1 min-h-[350px]">
             {gridCells.map((cell, idx) => {
-              // Get day bookings
-              const dayBookings = bookings.filter((b) => b.event_date === cell.dateStr)
+              // Get day bookings from precomputed map
+              const dayBookings = bookingsByDate[cell.dateStr] || []
               const hasBookings = dayBookings.length > 0
-              const hasOverlaps = checkDayOverlaps(dayBookings)
+              const hasOverlaps = overlapsByDate[cell.dateStr] || false
               const isSelected = selectedDayStr === cell.dateStr
 
               return (

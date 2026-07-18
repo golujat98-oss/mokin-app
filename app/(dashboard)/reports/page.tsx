@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   BarChart3,
@@ -28,7 +28,6 @@ import {
   Legend
 } from 'recharts'
 import { toast, Toaster } from 'react-hot-toast'
-import * as XLSX from 'xlsx'
 
 interface Booking {
   id: string
@@ -71,7 +70,7 @@ export default function ReportsPage() {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*')
+        .select('id, customer_name, mobile_number, event_date, total_amount, advance_amount, remaining_amount, status, program_name_snapshot')
       
       if (error) throw error
       setBookings(data || [])
@@ -87,47 +86,80 @@ export default function ReportsPage() {
     fetchBookings()
   }, [fetchBookings])
 
-  // Get bookings for selected month & year
-  const getMonthlyBookings = () => {
-    return bookings.filter(b => {
+  // Precompute monthly filtered bookings and statistics
+  const monthlyStats = useMemo(() => {
+    const data = bookings.filter(b => {
       const bDate = new Date(b.event_date)
       return bDate.getMonth() === selectedMonth && bDate.getFullYear() === selectedYear
     })
-  }
+    
+    const completed = data.filter(b => b.status === 'completed').length
+    const pending = data.filter(b => b.status === 'pending').length
+    const confirmed = data.filter(b => b.status === 'confirmed').length
+    const cancelled = data.filter(b => b.status === 'cancelled').length
 
-  // Get bookings for selected year
-  const getYearlyBookings = () => {
-    return bookings.filter(b => {
+    const financial = data.filter(b => b.status !== 'cancelled')
+    const revenue = financial.reduce((sum, b) => sum + Number(b.total_amount), 0)
+    const advance = financial.reduce((sum, b) => sum + Number(b.advance_amount), 0)
+    const balance = financial.reduce((sum, b) => sum + Number(b.remaining_amount), 0)
+
+    return {
+      monthlyData: data,
+      totalMonthlyBookings: data.length,
+      completedMonthly: completed,
+      pendingMonthly: pending,
+      confirmedMonthly: confirmed,
+      cancelledMonthly: cancelled,
+      monthlyRevenue: revenue,
+      monthlyAdvance: advance,
+      monthlyBalance: balance
+    }
+  }, [bookings, selectedMonth, selectedYear])
+
+  // Precompute yearly filtered bookings and statistics
+  const yearlyStats = useMemo(() => {
+    const data = bookings.filter(b => {
       const bDate = new Date(b.event_date)
       return bDate.getFullYear() === selectedYear
     })
-  }
 
-  // Aggregate monthly statistics
-  const monthlyData = getMonthlyBookings()
-  const totalMonthlyBookings = monthlyData.length
-  const completedMonthly = monthlyData.filter(b => b.status === 'completed').length
-  const pendingMonthly = monthlyData.filter(b => b.status === 'pending').length
-  const confirmedMonthly = monthlyData.filter(b => b.status === 'confirmed').length
-  const cancelledMonthly = monthlyData.filter(b => b.status === 'cancelled').length
-  
-  // Financial stats exclude cancelled
-  const financialMonthly = monthlyData.filter(b => b.status !== 'cancelled')
-  const monthlyRevenue = financialMonthly.reduce((sum, b) => sum + Number(b.total_amount), 0)
-  const monthlyAdvance = financialMonthly.reduce((sum, b) => sum + Number(b.advance_amount), 0)
-  const monthlyBalance = financialMonthly.reduce((sum, b) => sum + Number(b.remaining_amount), 0)
+    const financial = data.filter(b => b.status !== 'cancelled')
+    const revenue = financial.reduce((sum, b) => sum + Number(b.total_amount), 0)
+    const advance = financial.reduce((sum, b) => sum + Number(b.advance_amount), 0)
+    const balance = financial.reduce((sum, b) => sum + Number(b.remaining_amount), 0)
 
-  // Aggregate yearly statistics
-  const yearlyData = getYearlyBookings()
-  const totalYearlyBookings = yearlyData.length
-  
-  const financialYearly = yearlyData.filter(b => b.status !== 'cancelled')
-  const yearlyRevenue = financialYearly.reduce((sum, b) => sum + Number(b.total_amount), 0)
-  const yearlyAdvance = financialYearly.reduce((sum, b) => sum + Number(b.advance_amount), 0)
-  const yearlyBalance = financialYearly.reduce((sum, b) => sum + Number(b.remaining_amount), 0)
+    return {
+      yearlyData: data,
+      totalYearlyBookings: data.length,
+      yearlyRevenue: revenue,
+      yearlyAdvance: advance,
+      yearlyBalance: balance
+    }
+  }, [bookings, selectedYear])
 
-  // Generate chart data for selected year (12 months breakdown)
-  const getChartData = () => {
+  // Extract variables for easy template references
+  const {
+    monthlyData,
+    totalMonthlyBookings,
+    completedMonthly,
+    pendingMonthly,
+    confirmedMonthly,
+    cancelledMonthly,
+    monthlyRevenue,
+    monthlyAdvance,
+    monthlyBalance
+  } = monthlyStats
+
+  const {
+    yearlyData,
+    totalYearlyBookings,
+    yearlyRevenue,
+    yearlyAdvance,
+    yearlyBalance
+  } = yearlyStats
+
+  // Precompute chart data (12 months breakdown)
+  const chartData = useMemo(() => {
     return MONTHS_SHORT.map((label, idx) => {
       const monthBookings = yearlyData.filter(b => {
         const d = new Date(b.event_date)
@@ -146,10 +178,10 @@ export default function ReportsPage() {
         'Bookings': bookingsCount
       }
     })
-  }
+  }, [yearlyData])
 
   // Export stats to Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const dataToExport = activeTab === 'monthly' ? monthlyData : yearlyData
     if (dataToExport.length === 0) {
       toast.error('No records available for export')
@@ -191,11 +223,17 @@ export default function ReportsPage() {
       'Status': `Total Bookings: ${totalYearlyBookings}`
     }
 
-    const ws = XLSX.utils.json_to_sheet([...formattedRows, {}, summaryRow])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Report Sheet')
-    XLSX.writeFile(wb, `${title}.xlsx`)
-    toast.success('Spreadsheet exported successfully!')
+    try {
+      const XLSX = await import('xlsx')
+      const ws = XLSX.utils.json_to_sheet([...formattedRows, {}, summaryRow])
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Report Sheet')
+      XLSX.writeFile(wb, `${title}.xlsx`)
+      toast.success('Spreadsheet exported successfully!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to export report')
+    }
   }
 
   if (loading) {
@@ -375,7 +413,7 @@ export default function ReportsPage() {
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={getChartData()}
+                  data={chartData}
                   margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
                   <defs>

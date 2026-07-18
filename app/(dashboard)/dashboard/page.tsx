@@ -69,20 +69,32 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Get bookings
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('event_date', { ascending: true })
-
-      // Get expenses this month
       const startOfMonth = new Date()
       startOfMonth.setDate(1)
       const startOfMonthStr = startOfMonth.toISOString().split('T')[0]
-      const { data: expenses } = await supabase
-        .from('expenses')
-        .select('*')
-        .gte('expense_date', startOfMonthStr)
+
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+      sixMonthsAgo.setDate(1)
+      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0]
+
+      // Fetch bookings and expenses in parallel with only required columns
+      const [bookingsRes, expensesRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id, customer_name, mobile_number, event_date, status, total_amount, advance_amount, remaining_amount, program_name_snapshot')
+          .order('event_date', { ascending: true }),
+        supabase
+          .from('expenses')
+          .select('id, amount, expense_date')
+          .gte('expense_date', sixMonthsAgoStr)
+      ])
+
+      if (bookingsRes.error) throw bookingsRes.error
+      if (expensesRes.error) throw expensesRes.error
+
+      const bookings = bookingsRes.data || []
+      const expenses = expensesRes.data || []
 
       // Calculate statistics
       let totalBookings = 0
@@ -91,28 +103,26 @@ export default function DashboardPage() {
       const activeBookingsList: Booking[] = []
       const duesList: Booking[] = []
 
-      if (bookings) {
-        totalBookings = bookings.length
-        bookings.forEach((booking: Booking) => {
-          if (booking.status === 'confirmed') {
-            confirmedBookings++
+      totalBookings = bookings.length
+      bookings.forEach((booking: Booking) => {
+        if (booking.status === 'confirmed') {
+          confirmedBookings++
+        }
+        if (booking.status !== 'cancelled' && booking.status !== 'completed') {
+          totalDues += Number(booking.remaining_amount)
+          if (Number(booking.remaining_amount) > 0) {
+            duesList.push(booking)
           }
-          if (booking.status !== 'cancelled' && booking.status !== 'completed') {
-            totalDues += Number(booking.remaining_amount)
-            if (Number(booking.remaining_amount) > 0) {
-              duesList.push(booking)
-            }
-          }
-          activeBookingsList.push(booking)
-        });
-      }
+        }
+        activeBookingsList.push(booking)
+      });
 
       let monthlyExpenses = 0
-      if (expenses) {
-        expenses.forEach((expense: Expense) => {
+      expenses.forEach((expense: Expense) => {
+        if (expense.expense_date >= startOfMonthStr) {
           monthlyExpenses += Number(expense.amount)
-        })
-      }
+        }
+      })
 
       setStats({
         totalBookings,
@@ -140,39 +150,19 @@ export default function DashboardPage() {
         }
       }).reverse()
 
-      // Fetch all bookings/expenses for chart over past 6 months
-      const sixMonthsAgo = new Date()
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
-      sixMonthsAgo.setDate(1)
-      const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0]
-
-      const { data: chartBookings } = await supabase
-        .from('bookings')
-        .select('*')
-        .gte('event_date', sixMonthsAgoStr)
-
-      const { data: chartExpenses } = await supabase
-        .from('expenses')
-        .select('*')
-        .gte('expense_date', sixMonthsAgoStr)
-
       past6Months.forEach((item) => {
-        if (chartBookings) {
-          chartBookings.forEach((b: any) => {
-            const bDate = new Date(b.event_date)
-            if (bDate.getMonth() === item.monthIndex && bDate.getFullYear() === item.year && b.status !== 'cancelled') {
-              item.revenue += Number(b.total_amount)
-            }
-          })
-        }
-        if (chartExpenses) {
-          chartExpenses.forEach((e: any) => {
-            const eDate = new Date(e.expense_date)
-            if (eDate.getMonth() === item.monthIndex && eDate.getFullYear() === item.year) {
-              item.expenses += Number(e.amount)
-            }
-          })
-        }
+        bookings.forEach((b: any) => {
+          const bDate = new Date(b.event_date)
+          if (bDate.getMonth() === item.monthIndex && bDate.getFullYear() === item.year && b.status !== 'cancelled') {
+            item.revenue += Number(b.total_amount)
+          }
+        })
+        expenses.forEach((e: any) => {
+          const eDate = new Date(e.expense_date)
+          if (eDate.getMonth() === item.monthIndex && eDate.getFullYear() === item.year) {
+            item.expenses += Number(e.amount)
+          }
+        })
       })
 
       setChartData(past6Months)

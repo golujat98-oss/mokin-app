@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Users,
@@ -51,23 +51,23 @@ export default function CustomersPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: customerData, error: custError } = await supabase
-        .from('customers')
-        .select('*')
-        .order('name', { ascending: true })
+      // Run queries in parallel with explicit column selectors
+      const [custRes, bookRes] = await Promise.all([
+        supabase
+          .from('customers')
+          .select('id, name, mobile_number, notes')
+          .order('name', { ascending: true }),
+        supabase
+          .from('bookings')
+          .select('customer_id, event_date, status, program_name_snapshot')
+          .neq('status', 'cancelled')
+      ])
 
-      if (custError) throw custError
+      if (custRes.error) throw custRes.error
+      if (bookRes.error) throw bookRes.error
 
-      // Fetch bookings to display event dates / load WA templates
-      const { data: bookingData, error: bookError } = await supabase
-        .from('bookings')
-        .select('customer_id, event_date, status, program_name_snapshot')
-        .neq('status', 'cancelled')
-
-      if (bookError) throw bookError
-
-      setCustomers(customerData || [])
-      setBookings(bookingData || [])
+      setCustomers(custRes.data || [])
+      setBookings(bookRes.data || [])
     } catch (err) {
       console.error(err)
       toast.error('Failed to load customers catalog')
@@ -176,20 +176,35 @@ export default function CustomersPage() {
     }
   }
 
-  // Get closest upcoming booking for a customer
-  const getCustomerEventInfo = (customerId: string) => {
-    const custBookings = bookings.filter(b => b.customer_id === customerId)
-    if (custBookings.length === 0) return null
-
-    // Sort by closest date
-    custBookings.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
-    
-    // Find first upcoming or just get the first one
+  // Precompute closest upcoming booking for each customer
+  const upcomingBookingsMap = useMemo(() => {
+    const map: Record<string, Booking> = {}
     const today = new Date().toISOString().split('T')[0]
-    const upcoming = custBookings.find(b => b.event_date >= today)
+    
+    // Group bookings by customer_id
+    const grouped: Record<string, Booking[]> = {}
+    bookings.forEach(b => {
+      if (!b.customer_id) return
+      if (!grouped[b.customer_id]) {
+        grouped[b.customer_id] = []
+      }
+      grouped[b.customer_id].push(b)
+    })
+    
+    // Find closest booking for each customer
+    Object.entries(grouped).forEach(([customerId, custBookings]) => {
+      custBookings.sort((a, b) => a.event_date.localeCompare(b.event_date))
+      const upcoming = custBookings.find(b => b.event_date >= today)
+      map[customerId] = upcoming || custBookings[0]
+    })
+    
+    return map
+  }, [bookings])
 
-    return upcoming || custBookings[0]
-  }
+  // Get closest upcoming booking for a customer from precomputed map
+  const getCustomerEventInfo = useCallback((customerId: string) => {
+    return upcomingBookingsMap[customerId] || null
+  }, [upcomingBookingsMap])
 
   // Generate customized WhatsApp url template
   const getWhatsAppLink = (customer: Customer) => {
@@ -224,11 +239,13 @@ export default function CustomersPage() {
     return `tel:${cleanedNum}`
   }
 
-  // Search filtering
-  const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.mobile_number.includes(searchTerm)
-  )
+  // Search filtering memoized
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.mobile_number.includes(searchTerm)
+    )
+  }, [customers, searchTerm])
 
   if (loading) {
     return (

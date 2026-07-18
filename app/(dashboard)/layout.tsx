@@ -58,11 +58,13 @@ export default function DashboardLayout({
         if (user) {
           setUserEmail(user.email ?? null)
           // Fetch profile metadata
-          let { data: profile, error: profileError } = await supabase
+          let profile;
+          const { data, error: profileError } = await supabase
             .from('profiles')
             .select('business_name')
             .eq('id', user.id)
             .maybeSingle()
+          profile = data
           
           if (!profile && !profileError) {
             const defaultBusinessName = user.user_metadata?.business_name || 'My Business'
