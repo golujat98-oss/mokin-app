@@ -187,6 +187,7 @@ export default function ProgramsPage() {
 
   return (
     <>
+      <title>Programs | Smart Booking Pro</title>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
 
       {/* Header bar */}

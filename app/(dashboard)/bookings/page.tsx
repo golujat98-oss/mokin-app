@@ -622,6 +622,7 @@ export default function BookingsPage() {
 
   return (
     <>
+      <title>Bookings | Smart Booking Pro</title>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
 
       {/* Header bar */}
@@ -815,168 +816,219 @@ export default function BookingsPage() {
 
           {/* MOBILE CARD VIEW (REPLACE TABLE COMPLETELY ON MOBILE) */}
           <div className="block md:hidden space-y-4">
-            {filteredBookings.map((b) => (
-              <div key={b.id} className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 shadow-lg w-full">
-                {/* 1. Client Name & Phone Number */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-start gap-2">
-                    <span className="text-base shrink-0 mt-0.5" role="img" aria-label="client">👤</span>
-                    <h4 className="text-base font-bold text-white leading-snug break-words">{b.customer_name}</h4>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-400 text-sm break-all">
-                    <span className="text-base shrink-0" role="img" aria-label="phone">📞</span>
-                    <span>{b.mobile_number}</span>
-                  </div>
-                </div>
+            {filteredBookings.map((b) => {
+              // Extract initials for the customer avatar badge
+              const initials = b.customer_name
+                .split(' ')
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase() || '👤'
 
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
+              // Clean digits for communication links
+              const cleanedMobile = b.mobile_number.replace(/\D/g, '')
+              const phoneLink = `tel:${cleanedMobile}`
+              const whatsappLink = `https://wa.me/${cleanedMobile.length === 10 ? '91' + cleanedMobile : cleanedMobile}`
+              const mapsLink = b.venue_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.venue_address)}` : null
 
-                {/* 2. Event Date & Event Time */}
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <span className="text-base shrink-0" role="img" aria-label="date">📅</span>
-                    <span className="text-sm font-medium break-words leading-relaxed">
-                      {formatIndianDate(b.event_date)}
+              return (
+                <div key={b.id} className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 shadow-lg w-full">
+                  {/* 1. Client Avatar, Name & Quick Call/WhatsApp Shortcuts */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Avatar initials badge */}
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 border border-indigo-500/30 flex items-center justify-center text-white font-extrabold text-sm shrink-0 shadow-md">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-base font-bold text-white leading-snug break-words tracking-tight">{b.customer_name}</h4>
+                        <p className="text-sm text-slate-400 break-all font-medium mt-0.5">{b.mobile_number}</p>
+                      </div>
+                    </div>
+
+                    {/* Quick Dial and Chat triggers */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={phoneLink}
+                        title="Call Customer"
+                        className="p-2 rounded-xl bg-slate-950/40 hover:bg-indigo-950/30 border border-slate-800 text-indigo-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                      >
+                        <Phone size={16} />
+                      </a>
+                      <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="WhatsApp Chat"
+                        className="p-2 rounded-xl bg-slate-950/40 hover:bg-emerald-950/20 border border-slate-800 text-emerald-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                      >
+                        <Share2 size={16} />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
+
+                  {/* 2. Event Date & Event Time */}
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2.5 text-slate-300">
+                      <span className="text-base shrink-0" role="img" aria-label="date">📅</span>
+                      <span className="text-sm font-semibold break-words leading-relaxed text-slate-200">
+                        {formatIndianDate(b.event_date)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-slate-300">
+                      <span className="text-base shrink-0" role="img" aria-label="time">🕒</span>
+                      <span className="text-sm font-medium break-words leading-relaxed text-slate-200">
+                        {b.start_time && b.end_time 
+                          ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
+                          : 'Time unspecified'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
+
+                  {/* 3. Service Package */}
+                  <div className="flex items-center gap-2.5 text-slate-350 font-medium">
+                    <span className="text-base shrink-0" role="img" aria-label="music">🎵</span>
+                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider shrink-0">Package:</span>
+                    <span className="inline-block px-3 py-1 bg-slate-950/60 rounded-xl border border-slate-800 text-sm font-bold text-indigo-400 break-words">
+                      {b.program_name_snapshot || 'General'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <span className="text-base shrink-0" role="img" aria-label="time">🕒</span>
-                    <span className="text-sm break-words leading-relaxed">
-                      {b.start_time && b.end_time 
-                        ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
-                        : 'Time unspecified'}
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
+
+                  {/* 4. Location Details & Map Link */}
+                  <div className="flex items-start gap-2.5 text-slate-300">
+                    <span className="text-base shrink-0 mt-0.5" role="img" aria-label="location">📍</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="text-sm text-slate-450 font-bold uppercase tracking-wider">Venue Location</span>
+                        {mapsLink && (
+                          <a
+                            href={mapsLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs text-indigo-400 hover:text-white font-semibold transition-colors cursor-pointer"
+                          >
+                            <MapPin size={12} />
+                            <span>Navigate</span>
+                          </a>
+                        )}
+                      </div>
+                      <p className="text-sm break-words leading-relaxed text-slate-305 bg-slate-950/20 p-3 rounded-xl border border-slate-800/40">
+                        {b.venue_address || 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
+
+                  {/* Billing Summary Box */}
+                  <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase block tracking-wider">Total Bill</span>
+                      <span className="text-white font-extrabold text-sm mt-0.5">₹{Number(b.total_amount).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase block tracking-wider">Balance</span>
+                      {Number(b.remaining_amount) > 0 ? (
+                        <span className="text-amber-400 font-extrabold text-sm mt-0.5 block">₹{Number(b.remaining_amount).toLocaleString('en-IN')} due</span>
+                      ) : (
+                        <span className="text-emerald-400 font-extrabold text-sm mt-0.5 block font-bold">Paid In Full</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
+
+                  {/* 5. Status Badge */}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base shrink-0" role="img" aria-label="status">🏷️</span>
+                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider shrink-0">Status:</span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-extrabold ${
+                      b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                      b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                      b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                      'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                      {b.status}
                     </span>
                   </div>
-                </div>
 
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
+                  {/* Divider */}
+                  <div className="border-t border-slate-850" />
 
-                {/* 3. Service Package */}
-                <div className="flex items-center gap-2 text-slate-300">
-                  <span className="text-base shrink-0" role="img" aria-label="music">🎵</span>
-                  <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider shrink-0">Package:</span>
-                  <span className="inline-block px-3 py-1 bg-slate-950/60 rounded-xl border border-slate-800 text-sm font-medium text-indigo-400 break-words">
-                    {b.program_name_snapshot || 'General'}
-                  </span>
-                </div>
+                  {/* 6. Action buttons at bottom */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    {/* Left grouped edit, view, delete */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewBooking(b)}
+                        title="View details"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
+                      >
+                        <Eye size={16} />
+                        <span>View</span>
+                      </button>
 
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
+                      <button
+                        onClick={() => handleOpenEdit(b)}
+                        title="Edit booking"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
+                      >
+                        <Edit2 size={16} className="text-slate-400" />
+                        <span>Edit</span>
+                      </button>
 
-                {/* 4. Location */}
-                <div className="flex items-start gap-2 text-slate-300">
-                  <span className="text-base shrink-0 mt-0.5" role="img" aria-label="location">📍</span>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider block mb-1">Venue Location:</span>
-                    <p className="text-sm break-words leading-relaxed text-slate-350 bg-slate-950/20 p-3 rounded-xl border border-slate-800/40">
-                      {b.venue_address || 'Not specified'}
-                    </p>
+                      <button
+                        onClick={() => handleDelete(b.id)}
+                        title="Delete booking"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-450 hover:text-rose-450 transition-colors cursor-pointer text-sm font-semibold animate-none"
+                      >
+                        <Trash2 size={16} />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+
+                    {/* Right grouped PDF invoice & WhatsApp share */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          toast.promise(
+                            downloadBookingPDF(b as any, profile),
+                            {
+                              loading: 'Generating PDF...',
+                              success: 'PDF downloaded!',
+                              error: 'Failed to generate PDF'
+                            }
+                          )
+                        }}
+                        title="Download PDF Invoice"
+                        className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
+                      >
+                        <FileDown size={16} className="text-indigo-400" />
+                      </button>
+
+                      <button
+                        onClick={() => handleShareWhatsApp(b)}
+                        title="Share via WhatsApp"
+                        className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-emerald-950/20 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
+                      >
+                        <Share2 size={16} className="text-emerald-450" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
-
-                {/* Billing Summary Box */}
-                <div className="flex justify-between items-center bg-slate-950/40 p-3 rounded-xl border border-slate-850">
-                  <div>
-                    <span className="text-xs text-slate-500 font-semibold uppercase block">Total Bill</span>
-                    <span className="text-white font-bold text-sm mt-0.5">₹{Number(b.total_amount).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-500 font-semibold uppercase block">Balance</span>
-                    {Number(b.remaining_amount) > 0 ? (
-                      <span className="text-amber-400 font-bold text-sm mt-0.5 block">₹{Number(b.remaining_amount).toLocaleString('en-IN')} due</span>
-                    ) : (
-                      <span className="text-emerald-400 font-bold text-sm mt-0.5 block font-semibold">Paid In Full</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
-
-                {/* 5. Status Badge */}
-                <div className="flex items-center gap-2">
-                  <span className="text-base shrink-0" role="img" aria-label="status">🏷️</span>
-                  <span className="text-sm text-slate-500 font-semibold uppercase tracking-wider shrink-0">Status:</span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-                    b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                    b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                    b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                    'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                  }`}>
-                    {b.status}
-                  </span>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-slate-850" />
-
-                {/* 6. Action buttons at bottom */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  {/* Left grouped edit, view, delete */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setViewBooking(b)}
-                      title="View details"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
-                    >
-                      <Eye size={16} />
-                      <span>View</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleOpenEdit(b)}
-                      title="Edit booking"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer text-sm font-semibold animate-none"
-                    >
-                      <Edit2 size={16} className="text-slate-400" />
-                      <span>Edit</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(b.id)}
-                      title="Delete booking"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-450 hover:text-rose-450 transition-colors cursor-pointer text-sm font-semibold animate-none"
-                    >
-                      <Trash2 size={16} />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-
-                  {/* Right grouped PDF invoice & WhatsApp share */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        toast.promise(
-                          downloadBookingPDF(b as any, profile),
-                          {
-                            loading: 'Generating PDF...',
-                            success: 'PDF downloaded!',
-                            error: 'Failed to generate PDF'
-                          }
-                        )
-                      }}
-                      title="Download PDF Invoice"
-                      className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
-                    >
-                      <FileDown size={16} className="text-indigo-400" />
-                    </button>
-
-                    <button
-                      onClick={() => handleShareWhatsApp(b)}
-                      title="Share via WhatsApp"
-                      className="p-2.5 rounded-xl bg-slate-950/40 hover:bg-emerald-950/20 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer animate-none"
-                    >
-                      <Share2 size={16} className="text-emerald-450" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </>
       )}

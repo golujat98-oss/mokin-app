@@ -183,6 +183,7 @@ export default function InventoryPage() {
 
   return (
     <>
+      <title>Inventory | Smart Booking Pro</title>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
 
       {/* Header bar */}

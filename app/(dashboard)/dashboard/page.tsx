@@ -50,6 +50,68 @@ interface Expense {
   expense_date: string
 }
 
+// Loading Skeletons for Instant Feedbacks
+const MetricSkeleton = () => (
+  <div className="bg-slate-900/40 backdrop-blur-md border border-slate-900/60 p-5 rounded-2xl flex items-center justify-between shadow-xl animate-pulse">
+    <div className="space-y-3 flex-1">
+      <div className="h-3 bg-slate-800 rounded w-1/2" />
+      <div className="h-7 bg-slate-800 rounded w-1/3" />
+      <div className="h-3 bg-slate-800 rounded w-2/3" />
+    </div>
+    <div className="w-12 h-12 rounded-xl bg-slate-800/40 shrink-0" />
+  </div>
+)
+
+const ChartSkeleton = () => (
+  <div className="lg:col-span-2 bg-slate-900/30 backdrop-blur-md border border-slate-900 p-6 rounded-2xl flex flex-col shadow-xl animate-pulse min-h-[360px]">
+    <div className="space-y-2 mb-6">
+      <div className="h-4 bg-slate-800 rounded w-1/4" />
+      <div className="h-3 bg-slate-800 rounded w-1/3" />
+    </div>
+    <div className="flex-1 bg-slate-950/20 rounded-xl border border-slate-900/40" />
+  </div>
+)
+
+const DuesSkeleton = () => (
+  <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900 p-6 rounded-2xl flex flex-col shadow-xl animate-pulse min-h-[360px]">
+    <div className="space-y-2 mb-6">
+      <div className="h-4 bg-slate-800 rounded w-1/3" />
+      <div className="h-3 bg-slate-800 rounded w-1/2" />
+    </div>
+    <div className="space-y-4">
+      {[1, 2, 3].map((n) => (
+        <div key={n} className="flex justify-between items-center p-3.5 bg-slate-950/20 rounded-xl border border-slate-900">
+          <div className="space-y-2 flex-1 mr-4">
+            <div className="h-3.5 bg-slate-800 rounded w-2/3" />
+            <div className="h-2.5 bg-slate-800 rounded w-1/3" />
+          </div>
+          <div className="h-4 bg-slate-850 rounded w-16" />
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
+const TableSkeleton = () => (
+  <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900 p-6 rounded-2xl mt-8 shadow-xl animate-pulse">
+    <div className="space-y-2 mb-6">
+      <div className="h-4 bg-slate-800 rounded w-1/6" />
+      <div className="h-3 bg-slate-800 rounded w-1/4" />
+    </div>
+    <div className="space-y-4">
+      {[1, 2, 3].map((n) => (
+        <div key={n} className="flex items-center justify-between border-b border-slate-900/40 pb-4 last:border-0 last:pb-0">
+          <div className="space-y-2 flex-1">
+            <div className="h-3.5 bg-slate-800 rounded w-1/4" />
+            <div className="h-2.5 bg-slate-800 rounded w-1/5" />
+          </div>
+          <div className="h-3 bg-slate-800 rounded w-20" />
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
 export default function DashboardPage() {
   const supabase = createClient()
   
@@ -196,15 +258,44 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
-        <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />
-        Loading metrics...
-      </div>
+      <>
+        {/* Upper header action bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Dashboard</h1>
+            <p className="text-slate-400 text-sm mt-1">Here is a quick look at your booking business.</p>
+          </div>
+          <div>
+            <span className="flex items-center bg-indigo-650 text-white/50 font-medium text-sm px-4 py-2.5 rounded-xl cursor-not-allowed">
+              <Plus size={16} className="mr-2 text-slate-500" />
+              New Booking
+            </span>
+          </div>
+        </div>
+
+        {/* METRIC CARD GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <MetricSkeleton />
+          <MetricSkeleton />
+          <MetricSkeleton />
+          <MetricSkeleton />
+        </div>
+
+        {/* LOWER SECTION GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <ChartSkeleton />
+          <DuesSkeleton />
+        </div>
+
+        {/* RECENT BOOKINGS LIST SECTION */}
+        <TableSkeleton />
+      </>
     )
   }
 
   return (
     <>
+      <title>Dashboard | Smart Booking Pro</title>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
       
       {/* Upper header action bar */}
