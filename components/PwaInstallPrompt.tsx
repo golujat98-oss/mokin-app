@@ -6,13 +6,11 @@ import toast from 'react-hot-toast'
 export default function PwaInstallPrompt() {
   useEffect(() => {
     // 1. Register Service Worker
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((reg) => console.log('Service Worker registered:', reg.scope))
-          .catch((err) => console.error('Service Worker registration failed:', err))
-      })
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => console.log('Service Worker registered:', reg.scope))
+        .catch((err) => console.error('Service Worker registration failed:', err))
     }
 
     // 2. Handle Android browser install prompt
