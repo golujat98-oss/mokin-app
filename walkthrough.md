@@ -112,8 +112,21 @@ Here is a summary of all optimizations applied across the Smart Booking Pro code
   - Implemented modern layout designs incorporating company logo, owner details, GSTIN, full office address, structured client bill-to card, detailed event summary box, premium high-contrast dark table rows, color-coded payment status badge ribbon (PAID IN FULL / PARTIALLY PAID / PAYMENT PENDING), custom invoice suffix number format, dynamic UPI QR image payment scan block, authorized signature seal stamps, and fine terms & conditions sections.
   - **Critical Bug Fix**: Removed all literal string comments (`{/* ... */}`) from inside the string template of the PDF innerHTML generator, preventing them from rendering onto the generated document.
 
+### 12. Progressive Web App (PWA) Integration
+- **Files**:
+  - [NEW] [`app/manifest.ts`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/app/manifest.ts)
+  - [NEW] [`public/sw.js`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/public/sw.js)
+  - [NEW] [`components/PwaInstallPrompt.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/components/PwaInstallPrompt.tsx)
+  - [`app/layout.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/app/layout.tsx)
+- **Change**:
+  - Implemented native Next.js `manifest.ts` routing, serving a standard PWA manifest schema at `/manifest.webmanifest`.
+  - Configured app branding tokens: name, short name, theme color (`#6d4aff`), background color (`#0b1020`), standalone mode, and portrait orientations.
+  - Generated icon packages at different target resolutions: favicon-16x16, favicon-32x32, icon-192x192, icon-512x512, maskable versions, and Apple touch icons.
+  - Created a custom Service Worker `sw.js` for caching static scripts, stylesheet assets, web fonts, and product images locally. Configured rules to completely bypass Supabase and authentication APIs.
+  - Added a non-intrusive `beforeinstallprompt` event listener component `PwaInstallPrompt` linked into the root layout to display an Install PWA prompt toast on supported Android/Chrome browsers.
+
 ---
 
 ## 📈 Verification Status
 - **ESLint Linter**: Passed with 0 errors (`npx eslint app`).
-- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 89s with 0 errors.
+- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 2.2min with 0 errors (with manifest served at `/manifest.webmanifest`).
