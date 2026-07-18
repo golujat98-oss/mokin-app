@@ -125,8 +125,21 @@ Here is a summary of all optimizations applied across the Smart Booking Pro code
   - Created a custom Service Worker `sw.js` for caching static scripts, stylesheet assets, web fonts, and product images locally. Configured rules to completely bypass Supabase and authentication APIs.
   - Added a non-intrusive `beforeinstallprompt` event listener component `PwaInstallPrompt` linked into the root layout to display an Install PWA prompt toast on supported Android/Chrome browsers.
 
+### 13. PWA Installability Fix
+- **Files**:
+  - [`app/manifest.ts`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/app/manifest.ts) (restored)
+  - [`components/PwaInstallPrompt.tsx`](file:///C:/Users/MUSiC%20MAN/Desktop/MOKIN-APP/components/PwaInstallPrompt.tsx) (restored + fixed)
+- **Root Cause**: Both `app/manifest.ts` and `components/PwaInstallPrompt.tsx` had been accidentally deleted from the working directory after being committed. This meant:
+  1. No manifest was being served at `/manifest.webmanifest`, blocking all PWA installability criteria.
+  2. No service worker registration code existed, so `sw.js` never registered.
+  3. No `beforeinstallprompt` listener existed, so the install prompt could never fire.
+- **Fix**:
+  - Restored both files from git (`git restore`).
+  - Fixed a timing bug in `PwaInstallPrompt.tsx`: the service worker registration was wrapped in `window.addEventListener('load', ...)` inside a React `useEffect`. Since `useEffect` runs after React hydration (which happens after `load`), the event had already fired and the listener never triggered. Removed the `load` wrapper so SW registers immediately in `useEffect`.
+
 ---
 
 ## 📈 Verification Status
 - **ESLint Linter**: Passed with 0 errors (`npx eslint app`).
-- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully in 2.2min with 0 errors (with manifest served at `/manifest.webmanifest`).
+- **Production Build (TypeScript / Turbopack)**: Compiled and static page generated successfully with 0 errors (manifest served at `/manifest.webmanifest`).
+
