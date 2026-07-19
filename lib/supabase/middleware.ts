@@ -2,9 +2,6 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  console.log('[Middleware] URL:', request.nextUrl.pathname)
-  console.log('[Middleware] Cookies list:', request.cookies.getAll().map(c => `${c.name}=${c.value}`))
-
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,

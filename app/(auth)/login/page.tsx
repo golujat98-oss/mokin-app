@@ -39,14 +39,12 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    console.log('[Client Login] document.cookie before signInWithOAuth:', document.cookie)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
-    console.log('[Client Login] document.cookie after signInWithOAuth:', document.cookie)
     if (error) {
       toast.error(error.message)
     }
