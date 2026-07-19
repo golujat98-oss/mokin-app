@@ -33,7 +33,7 @@ export async function downloadBookingPDF(booking: any, profile: any) {
   // Fetch full profile and auth metadata for additional branding assets
   const { createClient } = await import('@/lib/supabase/client')
   const supabase = createClient()
-  
+
   let fullProfile = profile
   let meta: any = {}
   try {
@@ -68,8 +68,9 @@ export async function downloadBookingPDF(booking: any, profile: any) {
 
   const invoicePrefix = meta.invoice_prefix || 'INV'
   const invoiceFooter = meta.invoice_footer || '1. All payments must be validated with authorized signature.\n2. The advance booking amount is non-refundable.'
-  const qrUrl = meta.qr_code_url || ''
-  const signatureUrl = meta.signature_url || ''
+  // Only use Storage URLs — never base64 data URIs (prevents JWT bloat / HTTP 431)
+  const qrUrl = meta.qr_code_url && !meta.qr_code_url.startsWith('data:') ? meta.qr_code_url : ''
+  const signatureUrl = meta.signature_url && !meta.signature_url.startsWith('data:') ? meta.signature_url : ''
 
   // Format date and timing strings
   const formattedDate = formatIndianDate(booking.event_date)
@@ -258,7 +259,7 @@ export async function downloadBookingPDF(booking: any, profile: any) {
       backgroundColor: '#ffffff'
     })
     const imgData = canvas.toDataURL('image/png')
-    
+
     // A4 dimensions: 595.28 x 841.89 points
     const pdf = new jsPDF('p', 'pt', 'a4')
     const imgWidth = 595.28

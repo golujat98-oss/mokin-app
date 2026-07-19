@@ -19,6 +19,7 @@ import {
   Wrench
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
+import CustomDatePicker from '@/components/bookings/CustomDatePicker'
 
 interface Expense {
   id: string
@@ -42,6 +43,7 @@ export default function ExpensesPage() {
 
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
 
@@ -72,6 +74,7 @@ export default function ExpensesPage() {
   }, [supabase])
 
   useEffect(() => {
+    setMounted(true)
     fetchExpenses()
 
     // Postgres Realtime Sync
@@ -179,8 +182,12 @@ export default function ExpensesPage() {
     const currentYear = now.getFullYear()
 
     const current = expenses.filter((e) => {
-      const d = new Date(e.expense_date)
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+      if (!e.expense_date) return false
+      const parts = e.expense_date.split('-')
+      if (parts.length !== 3) return false
+      const year = parseInt(parts[0], 10)
+      const month = parseInt(parts[1], 10) - 1
+      return month === currentMonth && year === currentYear
     })
 
     let total = 0
@@ -222,7 +229,7 @@ export default function ExpensesPage() {
     return <IconComp size={size} className={className} />
   }
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
         <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />
@@ -461,12 +468,10 @@ export default function ExpensesPage() {
                 <label className="block text-sm font-medium text-slate-300">
                   Expense Date
                 </label>
-                <input
-                  type="date"
-                  required
+                <CustomDatePicker
                   value={expenseDate}
-                  onChange={(e) => setExpenseDate(e.target.value)}
-                  className="block w-full px-3.5 py-2.5 border border-slate-800 rounded-lg bg-slate-950/50 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm"
+                  onChange={(val) => setExpenseDate(val)}
+                  placeholder="Select expense date"
                 />
               </div>
 

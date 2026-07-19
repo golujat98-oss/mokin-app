@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Phone, Mail, Instagram, Copy, Check, ShieldCheck, Music, HelpCircle, ExternalLink } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 

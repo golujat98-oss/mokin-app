@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   TrendingDown,
   Clock,
+  CheckCircle,
   X,
   Phone,
   Share2,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
 
 interface DashboardStats {
@@ -136,7 +138,8 @@ const formatIndianDate = (dateStr: string) => {
   const monthIdx = parseInt(parts[1], 10) - 1
   const day = parseInt(parts[2], 10)
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${day} ${months[monthIdx]} ${year}`
+  const paddedDay = String(day).padStart(2, '0')
+  return `${paddedDay} ${months[monthIdx]} ${year}`
 }
 
 const format12HourTime = (timeStr: string | null | undefined) => {
@@ -158,8 +161,20 @@ const formatDateToISOString = (date: Date) => {
   return `${y}-${m}-${d}`
 }
 
+const getServiceIcon = (category: string | null | undefined) => {
+  const cat = (category || '').toLowerCase()
+  if (cat.includes('birthday') || cat.includes('cake')) return '🎂'
+  if (cat.includes('barat') || cat.includes('music') || cat.includes('dj')) return '🎵'
+  if (cat.includes('tent') || cat.includes('decor')) return '🎪'
+  if (cat.includes('reception') || cat.includes('wedding') || cat.includes('marriage')) return '💍'
+  if (cat.includes('conference') || cat.includes('meeting')) return '💼'
+  if (cat.includes('concert') || cat.includes('show')) return '🎸'
+  return '🎉'
+}
+
 export default function DashboardPage() {
   const supabase = createClient()
+  const router = useRouter()
   
   const [stats, setStats] = useState<DashboardStats>({
     totalBookings: 0,
@@ -174,7 +189,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   // Calendar states
-  const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date()
+    return new Date(today.getFullYear(), today.getMonth(), 1)
+  })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedBookings, setSelectedBookings] = useState<Booking[]>([])
   const [showPopup, setShowPopup] = useState(false)
@@ -208,6 +226,12 @@ export default function DashboardPage() {
     const active = allBookings.filter(b => b.status !== 'cancelled' && b.event_date >= todayStr)
     const sorted = [...active].sort((a, b) => a.event_date.localeCompare(b.event_date))
     return sorted[0] || null
+  }, [allBookings, todayStr])
+
+  const upcomingBookings = useMemo(() => {
+    const active = allBookings.filter(b => b.status !== 'cancelled' && b.event_date >= todayStr)
+    const sorted = [...active].sort((a, b) => a.event_date.localeCompare(b.event_date))
+    return sorted.slice(0, 5)
   }, [allBookings, todayStr])
 
   const fetchDashboardData = useCallback(async () => {
@@ -382,362 +406,294 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <>
-        {/* Upper header action bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Dashboard</h1>
-            <p className="text-slate-450 text-sm mt-1">Manage all your bookings from one place.</p>
-            <p className="text-xs text-indigo-400 font-medium mt-1">Track events • Payments • Customers</p>
+      <div className="space-y-6 text-left">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+          <div className="space-y-2">
+            <div className="h-3 bg-slate-800 rounded w-24 animate-pulse" />
+            <div className="h-8 bg-slate-800 rounded w-64 animate-pulse" />
           </div>
-          <div>
-            <span className="flex items-center bg-indigo-650 text-white/50 font-medium text-sm px-4 py-2.5 rounded-xl cursor-not-allowed">
-              <Plus size={16} className="mr-2 text-slate-500" />
-              New Booking
-            </span>
-          </div>
+          <div className="h-10 bg-slate-800 rounded w-32 animate-pulse" />
         </div>
 
-        {/* METRIC CARD GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Metric Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricSkeleton />
           <MetricSkeleton />
           <MetricSkeleton />
           <MetricSkeleton />
         </div>
 
-        {/* LOWER SECTION GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <CalendarSkeleton />
-          <DuesSkeleton />
+        {/* Dashboard Control/Summary Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-[140px] bg-slate-900/30 rounded-3xl animate-pulse" />
+          <div className="h-[140px] bg-slate-900/30 rounded-3xl animate-pulse" />
         </div>
 
-        {/* RECENT BOOKINGS LIST SECTION */}
+        {/* Main Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-[320px] bg-slate-900/30 rounded-3xl animate-pulse" />
+          <div className="h-[320px] bg-slate-900/30 rounded-3xl animate-pulse" />
+        </div>
+
+        {/* Recent Bookings Skeleton */}
         <TableSkeleton />
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="space-y-6 text-left pb-12 font-sans select-none max-w-7xl mx-auto">
       <title>Dashboard | Smart Booking Pro</title>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
-      {/* Business Control Panel Dashboard Header (MOBILE-FIRST HUB) */}
-      <div className="space-y-6 mb-8 text-left">
-        {/* Top Greeting and Business Info Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span className="text-[10px] uppercase font-black text-indigo-400 tracking-widest">{profile.business_name || 'Mookin Business'}</span>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight mt-0.5">
-              {greeting}, Owner 👋
+
+      {/* 1. Header Hero (Greeting + Profile Metadata Card) */}
+      <div className="bg-gradient-to-r from-purple-950/10 via-indigo-950/10 to-slate-950/20 border border-white/[0.06] rounded-[24px] p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+        {/* Decorative lights */}
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-purple-500/10 blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase font-black tracking-widest bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent px-2.5 py-0.8 bg-purple-500/10 rounded-full border border-purple-500/10 inline-block mb-1">
+              {profile.business_name || 'Smart Booking Business'}
+            </span>
+            <h1 className="text-2xl sm:text-4.5xl font-black text-white tracking-tight flex items-center gap-2">
+              {greeting} 👋
             </h1>
-          </div>
-        </div>
-
-        {/* 2-Column Mobile-First Control Board */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Today's Summary & Metrics */}
-          <div className="lg:col-span-2 bg-slate-900/30 backdrop-blur-xl border border-slate-900/40 p-6 sm:p-8 rounded-[24px] relative overflow-hidden shadow-2xl flex flex-col justify-between gap-6 min-h-[190px]">
-            <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-purple-650/5 blur-[80px] pointer-events-none" />
-            
-            <div>
-              <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider">Today's Summary</h2>
-              
-              {/* Daily questions & answers grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4.5 mt-4 text-xs font-sans">
-                <div className="bg-slate-950/30 border border-slate-900/60 p-3.5 rounded-xl">
-                  <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Events Today</p>
-                  <p className="text-lg font-black text-white mt-1">{todayBookings.length} Active</p>
-                </div>
-                <div className="bg-slate-950/30 border border-slate-900/60 p-3.5 rounded-xl">
-                  <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Pending Collection</p>
-                  <p className="text-lg font-black text-amber-405 mt-1">₹{stats.totalDues.toLocaleString('en-IN')}</p>
-                </div>
-                <div className="bg-slate-950/30 border border-slate-900/60 p-3 rounded-xl min-w-0 flex flex-col justify-between">
-                  <p className="text-slate-505 font-bold uppercase tracking-wider text-[10px]">Next Program</p>
-                  {nextEvent ? (
-                    <div className="mt-1 space-y-0.5 text-xs text-left">
-                      <p className="font-extrabold text-white truncate">🪔 {nextEvent.program_name_snapshot || 'General Event'}</p>
-                      <p className="text-slate-400 truncate">📍 {nextEvent.venue_address || 'Unspecified'}</p>
-                      <p className="text-slate-400 font-medium">🕖 {nextEvent.start_time ? format12HourTime(nextEvent.start_time) : 'Time unspecified'}</p>
-                      <p className="text-slate-450">👤 {nextEvent.customer_name}</p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-500 mt-2 text-left">No upcoming programs</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* KPI quick insight status row */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-900/50 text-[11px] text-slate-450">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Active bookings: {allBookings.filter(b => b.status === 'confirmed').length}
-              </span>
-              <span className="text-slate-650">•</span>
-              <span className="inline-flex items-center gap-1.5">
-                Month status: <span className="text-indigo-400 font-bold">Healthy</span>
-              </span>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+              Welcome back to your dashboard control panel.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 text-xs text-slate-500 font-semibold">
+              <span className="flex items-center gap-1">📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">🟢 {todayBookings.length} event{todayBookings.length !== 1 ? 's' : ''} today</span>
             </div>
           </div>
 
-          {/* Right Column: Redesigned Quick Booking Premium glowing CTA card */}
-          <div className="w-full lg:w-auto shrink-0">
-            <Link href="/bookings?new=true" className="w-full block">
-              <div className="w-full lg:w-[260px] bg-slate-900/30 backdrop-blur-xl border border-purple-500/30 hover:border-purple-500/50 rounded-[24px] p-6 relative overflow-hidden shadow-2xl shadow-purple-550/10 hover:shadow-purple-550/20 flex flex-col items-center justify-center text-center transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] active:scale-98 min-h-[190px] cursor-pointer group">
-                {/* Subtle animated background glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-indigo-600/5 opacity-50 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 w-60 h-60 rounded-full bg-purple-500/5 blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                
-                <div className="relative z-10 flex flex-col items-center gap-3">
-                  {/* Large plus icon with subtle animated glow */}
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-650 to-indigo-650 flex items-center justify-center text-white shadow-lg shadow-purple-550/30 hover:shadow-purple-550/50 group-hover:scale-110 transition-all duration-300 relative">
-                    <span className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping opacity-75 group-hover:animate-none scale-95" />
-                    <Plus size={28} className="stroke-[3] relative z-10" />
-                  </div>
-                  
-                  <div className="space-y-1 mt-1">
-                    <h3 className="text-sm font-extrabold uppercase tracking-widest text-white">New Booking</h3>
-                    <p className="text-[10px] text-purple-200 font-medium">Create a new booking in seconds</p>
-                  </div>
-                </div>
-              </div>
+          {/* Quick Actions (CTA Box) */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <Link href="/bookings?new=true" className="sm:w-auto">
+              <button className="w-full sm:w-auto relative group overflow-hidden flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-95 cursor-pointer shadow-md">
+                <Plus size={14} className="stroke-[3.5] relative z-10" />
+                <span className="relative z-10">New Booking</span>
+              </button>
+            </Link>
+            <Link href="/calendar" className="sm:w-auto">
+              <button className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-white font-extrabold text-xs tracking-wider uppercase transition-all active:scale-95 cursor-pointer">
+                View Calendar
+              </button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* TODAY'S EVENTS SECTION */}
-      <div className="mb-8 text-left">
-        <h2 className="text-lg font-bold text-white tracking-wide mb-4">Today's Events</h2>
-        {todayBookings.length === 0 ? (
-          <div className="bg-slate-900/30 backdrop-blur-xl border border-slate-900/40 p-6.5 rounded-[20px] text-center shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
-            <p className="text-slate-400 text-sm font-medium">You're free today. 🎉</p>
-            <p className="text-slate-500 text-xs mt-1">Enjoy your time off or plan ahead with the Dues Tracker below.</p>
+      {/* 2. Premium SaaS Metric Cards Grid */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {/* Total Bookings Card (Indigo Theme) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => router.push('/bookings')}
+          onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings')}
+          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-indigo-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-indigo-500/50"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-indigo-500/[0.03] blur-xl pointer-events-none group-hover:bg-indigo-500/[0.06] transition-colors" />
+          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Total Bookings</span>
+            <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight">{stats.totalBookings}</h3>
+            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Total bookings</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {todayBookings.map((b) => {
-              const isPaid = Number(b.remaining_amount) === 0
-              
-              return (
-                <div 
-                  key={b.id} 
-                  className="bg-slate-900/30 backdrop-blur-xl border border-slate-850 p-5 rounded-[20px] shadow-xl hover:border-slate-800 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between gap-4 font-sans relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-indigo-500/5 blur-xl pointer-events-none" />
-                  
-                  <div className="space-y-3">
-                    {/* Time and Status Pill */}
-                    <div className="flex justify-between items-center pb-2.5 border-b border-slate-900/50">
-                      <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-bold">
-                        <Clock size={12} className="text-indigo-400" />
-                        <span>
-                          {b.start_time && b.end_time
-                            ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
-                            : 'Time unspecified'}
-                        </span>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide ${
-                        b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' :
-                        b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border border-amber-500/20' :
-                        b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                        'bg-rose-500/10 text-rose-455 border border-rose-500/20'
-                      }`}>
-                        {b.status}
-                      </span>
-                    </div>
-                    
-                    {/* Event & Client Details */}
-                    <div>
-                      <h4 className="font-extrabold text-base text-white tracking-tight">{b.program_name_snapshot || 'General Event'}</h4>
-                      <p className="text-xs text-slate-400 mt-1 font-medium">Client: {b.customer_name}</p>
-                      {b.venue_address ? (
-                        <p className="text-xs text-slate-500 mt-1 flex items-start gap-1 min-w-0">
-                          <MapPin size={11} className="text-slate-600 mt-0.5 shrink-0" />
-                          <span className="truncate" title={b.venue_address}>{b.venue_address}</span>
-                        </p>
-                      ) : (
-                        <p className="text-xs text-slate-650 mt-1">No venue provided</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Payment Dues Balance Card */}
-                  <div className="flex items-center justify-between pt-2.5 border-t border-slate-900/50 text-xs">
-                    <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Outstanding Dues</span>
-                      <p className={`font-black text-sm mt-0.5 ${isPaid ? 'text-emerald-400' : 'text-amber-455'}`}>
-                        {isPaid ? 'Paid in Full' : `₹${Number(b.remaining_amount).toLocaleString('en-IN')}`}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedDate(b.event_date)
-                        setSelectedBookings([b])
-                        setShowPopup(true)
-                      }}
-                      className="px-3.5 py-1.5 rounded-lg bg-slate-950/50 hover:bg-slate-900 border border-slate-850 hover:border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold cursor-pointer active:scale-95 shadow-sm"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* METRIC CARD GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Bookings Card */}
-        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900/50 hover:border-slate-800/80 p-6 rounded-2xl flex items-center justify-between shadow-xl transition-all duration-350 hover:scale-[1.03] hover:-translate-y-0.5 group">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Bookings</p>
-            <h3 className="text-3xl font-extrabold text-white mt-2.5 tracking-tight">{stats.totalBookings}</h3>
-            <p className="text-xs text-indigo-400 font-semibold mt-1.5">{stats.confirmedBookings} Confirmed</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.25)]">
-            <Calendar size={22} />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <Calendar size={16} className="sm:hidden" />
+            <Calendar size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
 
-        {/* Total Remaining Dues Card */}
-        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900/50 hover:border-slate-800/80 p-6 rounded-2xl flex items-center justify-between shadow-xl transition-all duration-350 hover:scale-[1.03] hover:-translate-y-0.5 group">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Remaining Dues</p>
-            <h3 className="text-3xl font-extrabold text-white mt-2.5 tracking-tight">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
-            <p className="text-xs text-amber-450 font-semibold mt-1.5 flex items-center">
-              <AlertCircle size={12} className="mr-1 shrink-0" /> Pending Collection
-            </p>
+        {/* Pending Bookings Card (Amber Theme) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => router.push('/bookings?status=pending')}
+          onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=pending')}
+          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-amber-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-amber-500/50"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-amber-500/[0.03] blur-xl pointer-events-none group-hover:bg-amber-500/[0.06] transition-colors" />
+          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Pending Bookings</span>
+            <h3 className="text-xl sm:text-3xl font-black text-amber-450 tracking-tight">{allBookings.filter(b => b.status === 'pending').length}</h3>
+            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Waiting for confirmation</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
-            <IndianRupee size={22} />
-          </div>
-        </div>
-
-        {/* Expenses This Month Card */}
-        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900/50 hover:border-slate-800/80 p-6 rounded-2xl flex items-center justify-between shadow-xl transition-all duration-350 hover:scale-[1.03] hover:-translate-y-0.5 group">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Expenses (Month)</p>
-            <h3 className="text-3xl font-extrabold text-white mt-2.5 tracking-tight">₹{stats.monthlyExpenses.toLocaleString('en-IN')}</h3>
-            <p className="text-xs text-rose-450 font-semibold mt-1.5 flex items-center">
-              <TrendingDown size={12} className="mr-1 shrink-0" /> Outflow check
-            </p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center text-rose-405 group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-[0_0_15px_rgba(239,68,68,0.25)]">
-            <TrendingDown size={22} />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center text-amber-450 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <Clock size={16} className="sm:hidden" />
+            <Clock size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
 
-        {/* Target Status Card */}
-        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900/50 hover:border-slate-800/80 p-6 rounded-2xl flex items-center justify-between shadow-xl transition-all duration-350 hover:scale-[1.03] hover:-translate-y-0.5 group">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Target Status</p>
-            <h3 className="text-3xl font-extrabold text-white mt-2.5 tracking-tight">Healthy</h3>
-            <p className="text-xs text-emerald-455 font-semibold mt-1.5 flex items-center">
-              <TrendingUp size={12} className="mr-1 shrink-0" /> High conversion
-            </p>
+        {/* Completed Bookings Card (Green Theme) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => router.push('/bookings?status=completed')}
+          onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=completed')}
+          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-emerald-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-emerald-500/50"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-emerald-500/[0.03] blur-xl pointer-events-none group-hover:bg-emerald-500/[0.06] transition-colors" />
+          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Completed Bookings</span>
+            <h3 className="text-xl sm:text-3xl font-black text-emerald-400 tracking-tight">{allBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').length}</h3>
+            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Successfully completed</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.25)]">
-            <TrendingUp size={22} />
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <CheckCircle size={16} className="sm:hidden" />
+            <CheckCircle size={20} className="hidden sm:block stroke-[2]" />
+          </div>
+        </div>
+
+        {/* Remaining Dues Card (Red Theme) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => router.push('/bookings?filter=dues')}
+          onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?filter=dues')}
+          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-rose-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(239,68,68,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-rose-500/50"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-rose-500/[0.03] blur-xl pointer-events-none group-hover:bg-rose-500/[0.06] transition-colors" />
+          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Remaining Dues</span>
+            <h3 className="text-xl sm:text-3xl font-black text-rose-455 tracking-tight truncate">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
+            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Pending collection</span>
+          </div>
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-455 shrink-0 ml-1 relative z-10">
+            <IndianRupee size={16} className="sm:hidden" />
+            <IndianRupee size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
       </div>
 
-      {/* LOWER SECTION GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* 3. Today's Summary & Quick Control Board Widget */}
+      <div className="bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-3xl relative overflow-hidden shadow-2xl">
+        <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-purple-500/5 blur-[80px] pointer-events-none" />
         
-        {/* PREMIUM COMPACT MINI CALENDAR (Left 2 cols on wide screen) */}
-        <div className="lg:col-span-2 bg-slate-900/30 backdrop-blur-xl border border-slate-850 p-6 rounded-[24px] flex flex-col shadow-2xl relative overflow-hidden h-full">
-          {/* Soft purple glow accents */}
-          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-650/10 blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-indigo-650/10 blur-[100px] pointer-events-none" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Summary Items Grid */}
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
+              <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Today's Summary</p>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-2xl font-black text-white">{todayBookings.length}</span>
+                <span className="text-xs text-slate-400 font-semibold">Active Event{todayBookings.length !== 1 ? 's' : ''} Today</span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Active bookings: {allBookings.filter(b => b.status === 'confirmed').length}
+              </span>
+            </div>
+
+            <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
+              <p className="text-slate-550 font-bold uppercase tracking-wider text-[10px]">Financial Status</p>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-2xl font-black text-amber-405">₹{stats.totalDues.toLocaleString('en-IN')}</span>
+                <span className="text-xs text-slate-405 font-semibold">Outstanding Balance</span>
+              </div>
+              <span className="text-[10px] text-slate-450 mt-2 block font-medium">
+                Business health status: <span className="text-indigo-400 font-black">Healthy</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Next Event Quick View */}
+          <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
+            <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Next Program</p>
+            {nextEvent ? (
+              <div className="mt-2 space-y-1 text-xs text-left">
+                <p className="font-extrabold text-white truncate">🎂 {nextEvent.program_name_snapshot || 'General Event'}</p>
+                <p className="text-indigo-400 font-bold">📅 {formatIndianDate(nextEvent.event_date)}</p>
+                <p className="text-slate-400 font-medium">🕗 {nextEvent.start_time ? format12HourTime(nextEvent.start_time) : 'Time unspecified'}</p>
+                <p className="text-slate-455 truncate">📍 {nextEvent.venue_address || 'Unspecified location'}</p>
+                <p className="text-slate-455 font-semibold mt-1">👤 {nextEvent.customer_name}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 mt-2 text-left italic">No upcoming programs scheduled.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Main Compact Schedule Overview Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* COMPACT MINI CALENDAR & PROGRAMS WIDGET (Left 2 cols) */}
+        <div className="lg:col-span-2 bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-[24px] flex flex-col shadow-2xl relative overflow-hidden min-h-[380px]">
+          {/* Subtle neon accents */}
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-500/[0.08] blur-[80px] pointer-events-none" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-indigo-500/[0.08] blur-[80px] pointer-events-none" />
 
           {!mounted ? (
-            <div className="flex-1 flex flex-col justify-center items-center min-h-[300px]">
+            <div className="flex-1 flex flex-col justify-center items-center">
               <Loader2 className="animate-spin h-8 w-8 text-indigo-500" />
             </div>
           ) : (
-            <>
-              {/* Compact Calendar Header Navigation */}
-              <div className="flex items-center justify-between gap-4 mb-4 relative z-10">
-                <div>
-                  <h2 className="text-base font-extrabold text-white tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full relative z-10">
+              
+              {/* Left Column: Mini Calendar Date Grid */}
+              <div className="flex flex-col justify-between gap-4 border-b md:border-b-0 md:border-r border-white/[0.04] pb-5 md:pb-0 md:pr-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-extrabold text-white tracking-tight uppercase">
                     {currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-                  </h2>
-                  <Link href="/calendar">
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-400 hover:text-indigo-300 transition-colors mt-0.5 cursor-pointer uppercase tracking-wider">
-                      Full Calendar View <ChevronRight size={10} />
-                    </span>
-                  </Link>
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+                        setCurrentMonth(d)
+                      }}
+                      className="p-1 rounded-full border border-white/[0.06] hover:bg-white/[0.06] text-slate-400 hover:text-white transition-all duration-150 cursor-pointer"
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+                        setCurrentMonth(d)
+                      }}
+                      className="p-1 rounded-full border border-white/[0.06] hover:bg-white/[0.06] text-slate-400 hover:text-white transition-all duration-150 cursor-pointer"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => {
-                      const d = new Date(currentMonth)
-                      d.setMonth(d.getMonth() - 1)
-                      setCurrentMonth(d)
-                    }}
-                    className="p-1.5 rounded-full border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all duration-150 cursor-pointer bg-slate-950/40 hover:bg-slate-900 active:scale-90"
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const d = new Date(currentMonth)
-                      d.setMonth(d.getMonth() + 1)
-                      setCurrentMonth(d)
-                    }}
-                    className="p-1.5 rounded-full border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all duration-150 cursor-pointer bg-slate-950/40 hover:bg-slate-900 active:scale-90"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
 
-              <div className="flex-1 flex flex-col justify-between relative z-10 font-sans">
-                {/* Calendar Grid Header */}
-                <div className="grid grid-cols-7 gap-1.5 mb-1.5 text-center">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                    <div key={d} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider py-1">
-                      {d}
-                    </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-slate-550 uppercase tracking-widest mb-1">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
+                    <div key={`${d}-${idx}`} className="py-0.5">{d}</div>
                   ))}
                 </div>
 
-                {/* Compact Calendar Days Grid */}
-                <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-[220px]">
+                <div className="grid grid-cols-7 gap-1 flex-1">
                   {calendarCells.map((cell, idx) => {
                     const dateKey = formatDateToISOString(cell.date)
                     const cellBookings = bookingsByDate[dateKey] || []
                     const hasBookings = cellBookings.length > 0
-                    
                     const isSelected = selectedDate === dateKey
                     const isToday = dateKey === todayStr
 
-                    let cellStyle = `relative rounded-xl p-1 flex flex-col items-center justify-center h-10 w-full select-none transition-all duration-200 ease-out border text-center `
-
+                    let cellStyle = `min-h-[46px] w-full rounded-xl text-xs font-bold transition-all relative flex flex-col items-center justify-between p-1 cursor-pointer select-none `
                     if (!cell.isCurrentMonth) {
-                      cellStyle += `bg-slate-950/5 border-transparent text-slate-750 opacity-10 cursor-default`
+                      cellStyle += `text-slate-800 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
                     } else if (isSelected) {
-                      cellStyle += `bg-gradient-to-tr from-purple-650 to-indigo-650 border-transparent text-white shadow-lg shadow-purple-500/25 hover:scale-[1.05] active:scale-95 cursor-pointer`
+                      cellStyle += `bg-indigo-650 text-white shadow-md shadow-indigo-600/20 scale-105`
                     } else {
-                      cellStyle += `bg-slate-950/30 border-slate-900/60 text-slate-350 hover:border-slate-800 hover:bg-slate-900/10 hover:scale-[1.05] active:scale-95 cursor-pointer `
-                      
+                      cellStyle += `bg-slate-900/40 border border-slate-900/50 text-slate-350 hover:bg-slate-900 hover:border-slate-800 `
                       if (isToday) {
-                        cellStyle += `ring-2 ring-purple-500/80 shadow-[0_0_10px_rgba(168,85,247,0.4)] border-transparent bg-purple-500/5 `
+                        cellStyle += `ring-1.5 ring-indigo-500/80 bg-indigo-500/5 shadow-[0_0_8px_rgba(99,102,241,0.25)] text-indigo-400 border-transparent`
                       }
                     }
 
                     return (
                       <button
                         key={idx}
+                        disabled={!cell.isCurrentMonth}
                         onClick={() => {
                           if (cellBookings.length > 0) {
                             setSelectedDate(dateKey)
@@ -746,63 +702,123 @@ export default function DashboardPage() {
                           }
                         }}
                         className={cellStyle}
-                        disabled={!cell.isCurrentMonth}
                       >
-                        <div className="flex flex-col items-center justify-center h-full w-full relative">
-                          <span className={`text-xs font-extrabold ${
-                            !cell.isCurrentMonth ? '' : isSelected ? 'text-white' : isToday ? 'text-purple-400' : 'text-slate-400'
-                          }`}>
-                            {cell.dayNumber}
+                        <span className="text-[10px] leading-none font-extrabold">{cell.dayNumber}</span>
+                        {cell.isCurrentMonth && hasBookings ? (
+                          <div className="w-full text-[8px] font-bold text-center leading-none text-slate-300 truncate mt-0.5" title={cellBookings.map(b => `${b.customer_name} (${b.program_name_snapshot || 'Event'})`).join(', ')}>
+                            {(() => {
+                              const firstBooking = cellBookings[0]
+                              const emoji = getServiceIcon(firstBooking.program_name_snapshot)
+                              const name = firstBooking.program_name_snapshot || firstBooking.customer_name || 'Event'
+                              return `${emoji} ${name}`
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="h-2 w-2" />
+                        )}
+                        {cell.isCurrentMonth && cellBookings.length > 1 && (
+                          <span className="absolute top-0.5 right-1 text-[7px] font-black text-indigo-400 leading-none">
+                            +{cellBookings.length - 1}
                           </span>
-                          
-                          {cell.isCurrentMonth && hasBookings && (
-                            <span className="absolute bottom-0.5 flex gap-0.5 justify-center items-center">
-                              {cellBookings.slice(0, 3).map((b) => {
-                                let dotColor = 'bg-slate-500'
-                                if (b.status === 'confirmed') dotColor = 'bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]'
-                                else if (b.status === 'pending') dotColor = 'bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]'
-                                else if (b.status === 'completed') dotColor = 'bg-indigo-500 shadow-[0_0_4px_rgba(99,102,241,0.5)]'
-                                else if (b.status === 'cancelled') dotColor = 'bg-rose-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]'
-                                return (
-                                  <span key={b.id} className={`w-1 h-1 rounded-full shrink-0 ${dotColor}`} />
-                                )
-                              })}
-                            </span>
-                          )}
-
-                          {cell.isCurrentMonth && cellBookings.length > 1 && (
-                            <span className={`absolute -top-1.5 -right-1 text-[7px] font-black px-1 py-0.2 rounded-full scale-75 shrink-0 ${
-                              isSelected ? 'bg-white text-purple-650' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            }`}>
-                              {cellBookings.length}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </button>
                     )
                   })}
                 </div>
+
+                <div className="pt-2">
+                  <Link href="/calendar" className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.06] text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-all active:scale-[0.98]">
+                    <Calendar size={12} /> View Full Calendar
+                  </Link>
+                </div>
               </div>
-            </>
+
+              {/* Right Column: Today's & Upcoming Programs Lists */}
+              <div className="flex flex-col justify-between gap-4">
+                <div className="space-y-4">
+                  {/* Today's Programs section */}
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-405 uppercase tracking-widest mb-2">Today's Programs</h4>
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+                      {todayBookings.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic py-1.5">No programs scheduled for today.</p>
+                      ) : (
+                        todayBookings.map((b) => (
+                          <div key={b.id} className="flex items-center justify-between p-2 bg-emerald-500/[0.03] border border-emerald-500/10 rounded-xl">
+                            <div className="min-w-0 pr-2">
+                              <p className="text-xs font-black text-white truncate">{b.program_name_snapshot || 'General Event'}</p>
+                              <p className="text-[10px] text-slate-400 truncate mt-0.5">👤 {b.customer_name}</p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedDate(b.event_date)
+                                setSelectedBookings([b])
+                                setShowPopup(true)
+                              }}
+                              className="px-2 py-0.8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 text-[9px] font-black hover:bg-emerald-500 hover:text-white transition-colors uppercase tracking-wider"
+                            >
+                              View
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upcoming Programs section */}
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-405 uppercase tracking-widest mb-2">Upcoming Programs</h4>
+                    <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                      {upcomingBookings.filter(b => b.event_date > todayStr).length === 0 ? (
+                        <p className="text-xs text-slate-500 italic py-1.5">No upcoming programs scheduled.</p>
+                      ) : (
+                        upcomingBookings.filter(b => b.event_date > todayStr).slice(0, 3).map((b) => (
+                          <div key={b.id} className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-colors">
+                            <div className="min-w-0 pr-2">
+                              <p className="text-xs font-black text-white truncate">{b.program_name_snapshot || 'General Event'}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-455">
+                                <span className="font-extrabold text-slate-400">{formatIndianDate(b.event_date)}</span>
+                                <span>•</span>
+                                <span className="truncate">👤 {b.customer_name}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedDate(b.event_date)
+                                setSelectedBookings([b])
+                                setShowPopup(true)
+                              }}
+                              className="px-2 py-0.8 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-slate-350 hover:text-white text-[9px] font-black uppercase tracking-wider transition-all"
+                            >
+                              View
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           )}
         </div>
 
         {/* DUES TRACKER (Right 1 col) */}
-        <div className="bg-slate-900/30 backdrop-blur-xl border border-slate-850 p-6 rounded-[24px] flex flex-col shadow-2xl h-full relative overflow-hidden">
-          {/* Subtle accent glow */}
-          <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-indigo-650/5 blur-[80px] pointer-events-none" />
+        <div className="bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-[24px] flex flex-col shadow-2xl min-h-[380px] relative overflow-hidden">
+          <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-indigo-500/5 blur-[80px] pointer-events-none" />
 
-          <div className="mb-6 relative z-10">
-            <h2 className="text-xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Dues Tracker</h2>
-            <p className="text-slate-400 text-[11px] font-medium mt-0.5">Urgent collection notifications</p>
+          <div className="mb-4 relative z-10">
+            <h2 className="text-base font-extrabold text-white tracking-tight uppercase">Dues Tracker</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-0.5">Urgent collection checks</p>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto max-h-[350px] pr-1 relative z-10">
+          <div className="flex-1 space-y-3 overflow-y-auto max-h-[300px] pr-1 relative z-10">
             {dueBookings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-slate-500 text-center">
-                <Clock className="stroke-[1.5] h-10 w-10 text-slate-650 mb-3 animate-pulse" />
-                <p className="text-xs font-bold text-white">No remaining dues found!</p>
-                <p className="text-[10px] text-slate-500 mt-1 max-w-[160px]">All collections have been completed successfully.</p>
+              <div className="flex flex-col items-center justify-center py-16 text-slate-500 text-center">
+                <Clock className="stroke-[1.5] h-9 w-9 text-slate-650 mb-2 animate-pulse" />
+                <p className="text-xs font-black text-white">No remaining dues</p>
+                <p className="text-[9px] text-slate-500 mt-1 max-w-[150px]">All pending collections have been completed.</p>
               </div>
             ) : (
               dueBookings.map((b) => {
@@ -813,30 +829,51 @@ export default function DashboardPage() {
                   .join('')
                   .toUpperCase() || '👤'
 
+                const total = Number(b.total_amount) || 1
+                const paid = Number(b.advance_amount) || 0
+                const paidPercent = Math.min(100, Math.max(0, Math.round((paid / total) * 100)))
+
                 return (
                   <div 
                     key={b.id} 
-                    className="flex items-center justify-between p-3.5 bg-slate-950/45 border border-slate-900/80 hover:border-slate-850 hover:bg-slate-900/50 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] rounded-xl group"
+                    className="p-3.5 bg-slate-950/40 border border-white/[0.04] hover:border-white/[0.08] hover:bg-slate-900/20 transition-all duration-250 rounded-2xl group flex flex-col gap-2.5"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {/* Customer Avatar initials */}
-                      <div className="w-9 h-9 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-slate-350 font-extrabold text-xs shrink-0 shadow-inner group-hover:border-slate-800 transition-colors">
-                        {initials}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8.5 h-8.5 rounded-full bg-slate-900 border border-white/[0.05] flex items-center justify-center text-slate-300 font-extrabold text-xs shrink-0 group-hover:border-slate-800 transition-colors">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-white truncate">{b.customer_name}</p>
+                          <p className="text-[9px] text-slate-500 font-bold mt-0.5">{formatIndianDate(b.event_date)}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{b.customer_name}</p>
-                        <p className="text-[10px] text-slate-450 mt-0.5">{formatIndianDate(b.event_date)}</p>
+                      
+                      <div className="text-right shrink-0">
+                        <span className="inline-block text-[10px] font-black text-amber-450 bg-amber-500/10 border border-amber-500/15 px-2.5 py-0.5 rounded-full leading-none">
+                          ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
+                        </span>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      {/* Due Badge */}
-                      <span className="inline-block text-[10px] font-black text-amber-450 bg-amber-500/10 border border-amber-500/15 px-2 py-0.5 rounded-full leading-none">
-                        ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
+
+                    {/* Progress indicator */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                        <span>Paid Progress</span>
+                        <span>{paidPercent}%</span>
+                      </div>
+                      <div className="w-full bg-slate-900 rounded-full h-1 overflow-hidden">
+                        <div className="bg-indigo-500 h-1 rounded-full transition-all duration-500" style={{ width: `${paidPercent}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-white/[0.02] mt-0.5">
+                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">
+                        {b.program_name_snapshot || 'General Event'}
                       </span>
                       <Link href={`/bookings?edit=${b.id}`}>
-                        <span className="inline-flex items-center justify-center px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500 border border-indigo-500/20 hover:border-transparent text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer shadow-sm active:scale-95">
-                          Collect <ChevronRight size={10} className="ml-0.5" />
+                        <span className="inline-flex items-center justify-center px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500 border border-indigo-500/15 hover:border-transparent text-indigo-400 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-95">
+                          Collect Dues <ChevronRight size={8} className="ml-0.5" />
                         </span>
                       </Link>
                     </div>
@@ -849,91 +886,100 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* RECENT BOOKINGS LIST SECTION */}
-      <div className="bg-slate-900/30 backdrop-blur-xl border border-slate-850 p-6 rounded-[24px] mt-8 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
+      {/* 5. RECENT BOOKINGS LIST SECTION */}
+      <div className="bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-[24px] shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-white tracking-wide">Recent Bookings</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Quick status preview of latest logs</p>
+            <h2 className="text-base font-extrabold text-white tracking-tight uppercase">Recent Bookings</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-0.5">Quick preview of latest logs</p>
           </div>
           <Link href="/bookings">
-            <span className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center cursor-pointer">
-              View All <ChevronRight size={16} className="ml-1" />
+            <span className="text-xs font-black text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-wider flex items-center cursor-pointer">
+              View All <ChevronRight size={12} className="ml-0.5" />
             </span>
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden rounded-2xl border border-white/[0.05] bg-slate-950/20 shadow-inner">
           {recentBookings.length === 0 ? (
             <div className="text-center py-12 text-slate-500">
-              <p className="text-sm">No recent bookings logged yet.</p>
-              <p className="text-xs text-slate-650 mt-1">Get started by creating a new program and booking.</p>
+              <p className="text-xs">No recent bookings logged.</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse font-sans">
-              <thead>
-                <tr className="border-b border-slate-900/60 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Client Name</th>
-                  <th className="py-3.5 px-4">Event Date</th>
-                  <th className="py-3.5 px-4">Service Category</th>
-                  <th className="py-3.5 px-4">Total Amount</th>
-                  <th className="py-3.5 px-4">Dues Status</th>
-                  <th className="py-3.5 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm divide-y divide-slate-900/40">
-                {recentBookings.map((b) => {
-                  const initials = b.customer_name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase() || '👤'
-                  
-                  return (
-                    <tr key={b.id} className="hover:bg-slate-900/10 transition-colors">
-                      <td className="py-3.5 px-4 font-medium text-white">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8.5 h-8.5 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-slate-350 font-bold text-xs shrink-0 shadow-inner">
-                            {initials}
+            <div className="overflow-x-auto max-h-[350px] scrollbar-none">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.05] bg-slate-950/80 text-[9px] font-black text-slate-450 uppercase tracking-widest sticky top-0 z-10 backdrop-blur-md">
+                    <th className="py-3.5 px-4">Client</th>
+                    <th className="py-3.5 px-4">Scheduled Date</th>
+                    <th className="py-3.5 px-4">Program Category</th>
+                    <th className="py-3.5 px-4">Pricing</th>
+                    <th className="py-3.5 px-4">Ledger Dues</th>
+                    <th className="py-3.5 px-4">Workflow Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.02] bg-transparent">
+                  {recentBookings.map((b) => {
+                    const initials = b.customer_name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase() || '👤'
+                    
+                    return (
+                      <tr key={b.id} className="hover:bg-white/[0.02] transition-colors duration-150 group">
+                        <td className="py-3.5 px-4 font-medium text-white">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8.5 h-8.5 rounded-full bg-slate-900 border border-white/[0.04] flex items-center justify-center text-slate-350 font-black text-[10px] shrink-0 group-hover:border-slate-800 transition-colors">
+                              {initials}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-white leading-none">{b.customer_name}</p>
+                              <p className="text-[10px] text-slate-500 font-bold mt-1 leading-none">{b.mobile_number}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-white leading-none">{b.customer_name}</p>
-                            <p className="text-xs text-slate-500 font-normal mt-0.5">{b.mobile_number}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-300">{formatIndianDate(b.event_date)}</td>
-                      <td className="py-3.5 px-4 text-slate-400">
-                        <span className="px-2.5 py-1 bg-slate-950/40 rounded-lg border border-slate-900 text-xs">
-                          {b.program_name_snapshot || 'General Service'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-white font-semibold">₹{Number(b.total_amount).toLocaleString('en-IN')}</td>
-                      <td className="py-3.5 px-4">
-                        {Number(b.remaining_amount) > 0 ? (
-                          <span className="text-amber-450 font-bold text-xs">
-                            ₹{Number(b.remaining_amount).toLocaleString('en-IN')} pending
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-355 font-bold">{formatIndianDate(b.event_date)}</td>
+                        <td className="py-3.5 px-4 text-slate-400">
+                          <span className="px-2.5 py-0.8 bg-slate-900/60 rounded-lg border border-white/[0.04] text-[10px] font-semibold text-indigo-400">
+                            {b.program_name_snapshot || 'General Service'}
                           </span>
-                        ) : (
-                          <span className="text-emerald-400 font-bold text-xs">Paid</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
-                          b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-445 border border-emerald-500/20' :
-                          b.status === 'pending' ? 'bg-amber-500/10 text-amber-445 border border-amber-500/20' :
-                          b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                          'bg-rose-500/10 text-rose-455 border border-rose-500/20'
-                        }`}>
-                          {b.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="py-3.5 px-4 text-white font-extrabold">₹{Number(b.total_amount).toLocaleString('en-IN')}</td>
+                        <td className="py-3.5 px-4">
+                          {Number(b.remaining_amount) > 0 ? (
+                            <span className="text-amber-450 font-extrabold bg-amber-500/5 px-2.5 py-0.5 rounded-md border border-amber-500/10">
+                              ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
+                            </span>
+                          ) : (
+                            <span className="text-emerald-400 font-extrabold bg-emerald-500/5 px-2.5 py-0.5 rounded-md border border-emerald-500/10">
+                              Paid
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.8 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+                            b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' :
+                            b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' :
+                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                            'bg-rose-500/10 text-rose-455 border-rose-500/20'
+                          }`}>
+                            <span className={`w-1 h-1 rounded-full mr-1.5 shrink-0 ${
+                              b.status === 'confirmed' ? 'bg-emerald-500' :
+                              b.status === 'pending' ? 'bg-amber-500' :
+                              b.status === 'completed' ? 'bg-indigo-500' :
+                              'bg-rose-500'
+                            }`} />
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -1029,7 +1075,7 @@ export default function DashboardPage() {
 
                       {/* Event details */}
                       <div className="space-y-3">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Event Schedule</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Event Schedule</span>
                         <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-900/60 text-xs space-y-2 text-slate-300">
                           <div className="flex items-center gap-2">
                             <Clock size={12} className="text-slate-500 animate-pulse" />
@@ -1066,17 +1112,17 @@ export default function DashboardPage() {
                     {/* Payment Status Box */}
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Breakdown</span>
+                        <span className="text-[10px] font-bold text-slate-505 uppercase tracking-wider">Payment Breakdown</span>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${isPaid ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-450 border border-amber-500/20 animate-pulse'}`}>
                           {isPaid ? 'PAID' : 'DUE'}
                         </span>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-slate-950/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                        <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Total</p>
                           <p className="text-sm font-bold text-white mt-1">₹{Number(b.total_amount).toLocaleString('en-IN')}</p>
                         </div>
-                        <div className="bg-slate-950/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                        <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Advance</p>
                           <p className="text-sm font-bold text-white mt-1">₹{Number(b.advance_amount).toLocaleString('en-IN')}</p>
                         </div>
@@ -1136,6 +1182,14 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </>
+      {/* Floating Action Button (FAB) for Mobile Quick Bookings */}
+      <div className="md:hidden fixed bottom-24 right-4 z-40">
+        <Link href="/bookings?new=true">
+          <button className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-650 text-white flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+            <Plus size={22} className="stroke-[3.5]" />
+          </button>
+        </Link>
+      </div>
+    </div>
   )
 }

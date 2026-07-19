@@ -60,12 +60,27 @@ const format12HourTime = (timeStr: string | null | undefined) => {
   return `${hour}:${minute} ${period}`
 }
 
+const getServiceIcon = (category: string | null | undefined) => {
+  const cat = (category || '').toLowerCase()
+  if (cat.includes('birthday') || cat.includes('cake')) return '🎂'
+  if (cat.includes('barat') || cat.includes('music') || cat.includes('dj')) return '🎵'
+  if (cat.includes('tent') || cat.includes('decor')) return '🎪'
+  if (cat.includes('reception') || cat.includes('wedding') || cat.includes('marriage')) return '💍'
+  if (cat.includes('conference') || cat.includes('meeting')) return '💼'
+  if (cat.includes('concert') || cat.includes('show')) return '🎸'
+  return '🎉'
+}
+
 export default function CalendarPage() {
   const supabase = createClient()
 
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date()
+    return new Date(today.getFullYear(), today.getMonth(), 1)
+  })
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   // Selected day detail panel state
   const [selectedDayStr, setSelectedDayStr] = useState<string | null>(null)
@@ -97,6 +112,7 @@ export default function CalendarPage() {
   }, [supabase, currentDate])
 
   useEffect(() => {
+    setMounted(true)
     fetchBookings()
 
     // Realtime listeners
@@ -221,7 +237,7 @@ export default function CalendarPage() {
     return `${y}-${m}-${d}`
   }, [])
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
         <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />
@@ -303,17 +319,17 @@ export default function CalendarPage() {
               const isSelected = selectedDayStr === cell.dateStr
               const isToday = cell.dateStr === todayStr
 
-              let cellStyle = `relative rounded-xl p-2.5 flex flex-col justify-between min-h-[72px] select-none transition-all duration-200 ease-out border text-left `
+              let cellStyle = `relative rounded-xl p-2 flex flex-col justify-between min-h-[85px] sm:min-h-[110px] md:min-h-[120px] select-none transition-all duration-200 ease-out border text-left `
 
               if (!cell.isCurrentMonth) {
-                cellStyle += `bg-slate-950/5 border-transparent text-slate-750 opacity-20 cursor-default`
+                cellStyle += `bg-slate-950/5 border-transparent text-slate-750 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
               } else if (isSelected) {
-                cellStyle += `bg-gradient-to-tr from-purple-650 to-indigo-650 border-transparent text-white shadow-lg shadow-purple-500/25 hover:scale-[1.04] active:scale-95 cursor-pointer`
+                cellStyle += `bg-indigo-650 border-transparent text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.04] active:scale-95 cursor-pointer`
               } else {
                 cellStyle += `bg-slate-950/30 border-slate-900/60 text-slate-350 hover:border-slate-800 hover:bg-slate-900/10 hover:scale-[1.04] active:scale-95 cursor-pointer `
                 
                 if (isToday) {
-                  cellStyle += `ring-2 ring-purple-500/80 shadow-[0_0_15px_-3px_rgba(168,85,247,0.5)] border-transparent bg-purple-500/5 `
+                  cellStyle += `ring-2 ring-indigo-500/80 shadow-[0_0_15px_-3px_rgba(99,102,241,0.5)] border-transparent bg-indigo-500/5 `
                 } else if (hasOverlaps) {
                   cellStyle += `bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40 `
                 }
@@ -326,15 +342,15 @@ export default function CalendarPage() {
                   disabled={!cell.isCurrentMonth}
                   className={cellStyle}
                 >
-                  <div className="flex justify-between items-center w-full">
+                  <div className="flex justify-between items-center w-full mb-1 shrink-0">
                     <span className={`text-xs font-extrabold ${
-                      !cell.isCurrentMonth ? '' : isSelected ? 'text-white' : isToday ? 'text-purple-400' : hasOverlaps ? 'text-amber-500' : 'text-slate-400'
+                      !cell.isCurrentMonth ? '' : isSelected ? 'text-white' : isToday ? 'text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-md border border-indigo-500/20' : hasOverlaps ? 'text-amber-500' : 'text-slate-450'
                     }`}>
                       {cell.day}
                     </span>
                     {cell.isCurrentMonth && dayBookings.length > 1 && (
-                      <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-purple-500/20 text-purple-450 border border-purple-500/30'
+                      <span className={`text-[8px] font-black px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20'
                       }`}>
                         {dayBookings.length}
                       </span>
@@ -342,25 +358,58 @@ export default function CalendarPage() {
                   </div>
 
                   {cell.isCurrentMonth && hasBookings && (
-                    <div className="mt-auto flex gap-1 items-center justify-start flex-wrap max-w-full">
-                      {dayBookings.slice(0, 3).map((b) => {
-                        let dotColor = 'bg-slate-500'
-                        if (b.status === 'confirmed') dotColor = 'bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]'
-                        else if (b.status === 'pending') dotColor = 'bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]'
-                        else if (b.status === 'completed') dotColor = 'bg-indigo-500 shadow-[0_0_4px_rgba(99,102,241,0.5)]'
-                        else if (b.status === 'cancelled') dotColor = 'bg-rose-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]'
-                        
-                        return (
-                          <span
-                            key={b.id}
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`}
-                            title={`${b.customer_name} (${b.status})`}
-                          />
-                        )
-                      })}
-                      {dayBookings.length > 3 && (
-                        <span className="text-[7px] text-slate-550 font-black leading-none shrink-0">+</span>
-                      )}
+                    <div className="w-full flex-1 flex flex-col gap-1 justify-end overflow-hidden">
+                      {/* Desktop stack view */}
+                      <div className="hidden sm:flex flex-col gap-1.5 w-full">
+                        {dayBookings.slice(0, 2).map((b) => {
+                          const emoji = getServiceIcon(b.program_name_snapshot)
+                          const name = b.program_name_snapshot || b.customer_name || 'Event'
+                          let badgeColor = 'bg-slate-550/10 text-slate-400 border border-slate-500/15'
+                          if (b.status === 'confirmed') badgeColor = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 shadow-[0_0_6px_rgba(16,185,129,0.05)]'
+                          else if (b.status === 'pending') badgeColor = 'bg-amber-500/10 text-amber-400 border border-amber-500/15 shadow-[0_0_6px_rgba(245,158,11,0.05)]'
+                          else if (b.status === 'completed') badgeColor = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/15 shadow-[0_0_6px_rgba(99,102,241,0.05)]'
+                          else if (b.status === 'cancelled') badgeColor = 'bg-rose-500/10 text-rose-455 border border-rose-500/15'
+
+                          return (
+                            <div
+                              key={b.id}
+                              className={`w-full px-1.5 py-0.8 rounded-lg text-[9px] font-bold truncate flex items-center gap-1 ${
+                                isSelected ? 'bg-white/10 text-white border-transparent' : badgeColor
+                              }`}
+                              title={`Client: ${b.customer_name}\nProgram: ${b.program_name_snapshot || 'General Event'}\nStatus: ${b.status}`}
+                            >
+                              <span className="shrink-0">{emoji}</span>
+                              <span className="truncate">{name}</span>
+                            </div>
+                          )
+                        })}
+                        {dayBookings.length > 2 && (
+                          <span className={`text-[8px] font-black tracking-wider uppercase pl-1 ${isSelected ? 'text-white/60' : 'text-indigo-400'}`}>
+                            +{dayBookings.length - 2} more
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Mobile view tags */}
+                      <div className="flex sm:hidden gap-0.5 justify-start items-center w-full">
+                        {dayBookings.slice(0, 3).map((b) => {
+                          let dotColor = 'bg-slate-500'
+                          if (b.status === 'confirmed') dotColor = 'bg-emerald-500'
+                          else if (b.status === 'pending') dotColor = 'bg-amber-500'
+                          else if (b.status === 'completed') dotColor = 'bg-indigo-500'
+                          else if (b.status === 'cancelled') dotColor = 'bg-rose-500'
+                          return (
+                            <span
+                              key={b.id}
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`}
+                              title={`${b.customer_name} (${b.status})`}
+                            />
+                          )
+                        })}
+                        {dayBookings.length > 3 && (
+                          <span className="text-[7px] text-slate-555 font-black leading-none shrink-0">+</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </button>

@@ -15,19 +15,20 @@ import {
   HelpCircle,
   TrendingDown
 } from 'lucide-react'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend
-} from 'recharts'
 import { toast, Toaster } from 'react-hot-toast'
+import dynamic from 'next/dynamic'
+
+const AreaChartComponent = dynamic(() => import('@/components/reports/AreaChartComponent'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[350px] w-full flex items-center justify-center text-slate-500 bg-slate-950/20 border border-white/[0.04] rounded-2xl animate-pulse">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="animate-spin h-6 w-6 text-indigo-500" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Loading chart analytics...</span>
+      </div>
+    </div>
+  )
+})
 
 interface Booking {
   id: string
@@ -51,11 +52,23 @@ const MONTHS_SHORT = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ]
 
+const formatIndianDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  const year = parseInt(parts[0], 10)
+  const monthIdx = parseInt(parts[1], 10) - 1
+  const day = parseInt(parts[2], 10)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${day} ${months[monthIdx]} ${year}`
+}
+
 export default function ReportsPage() {
   const supabase = createClient()
   
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly'>('monthly')
   
   // Date filter states
@@ -71,6 +84,8 @@ export default function ReportsPage() {
       const { data, error } = await supabase
         .from('bookings')
         .select('id, customer_name, mobile_number, event_date, total_amount, advance_amount, remaining_amount, status, program_name_snapshot')
+        .gte('event_date', `${selectedYear}-01-01`)
+        .lte('event_date', `${selectedYear}-12-31`)
       
       if (error) throw error
       setBookings(data || [])
@@ -80,17 +95,22 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, selectedYear])
 
   useEffect(() => {
+    setMounted(true)
     fetchBookings()
   }, [fetchBookings])
 
   // Precompute monthly filtered bookings and statistics
   const monthlyStats = useMemo(() => {
     const data = bookings.filter(b => {
-      const bDate = new Date(b.event_date)
-      return bDate.getMonth() === selectedMonth && bDate.getFullYear() === selectedYear
+      if (!b.event_date) return false
+      const parts = b.event_date.split('-')
+      if (parts.length !== 3) return false
+      const year = parseInt(parts[0], 10)
+      const month = parseInt(parts[1], 10) - 1
+      return month === selectedMonth && year === selectedYear
     })
     
     const completed = data.filter(b => b.status === 'completed').length
@@ -119,8 +139,11 @@ export default function ReportsPage() {
   // Precompute yearly filtered bookings and statistics
   const yearlyStats = useMemo(() => {
     const data = bookings.filter(b => {
-      const bDate = new Date(b.event_date)
-      return bDate.getFullYear() === selectedYear
+      if (!b.event_date) return false
+      const parts = b.event_date.split('-')
+      if (parts.length !== 3) return false
+      const year = parseInt(parts[0], 10)
+      return year === selectedYear
     })
 
     const financial = data.filter(b => b.status !== 'cancelled')
@@ -162,8 +185,11 @@ export default function ReportsPage() {
   const chartData = useMemo(() => {
     return MONTHS_SHORT.map((label, idx) => {
       const monthBookings = yearlyData.filter(b => {
-        const d = new Date(b.event_date)
-        return d.getMonth() === idx
+        if (!b.event_date) return false
+        const parts = b.event_date.split('-')
+        if (parts.length !== 3) return false
+        const month = parseInt(parts[1], 10) - 1
+        return month === idx
       })
       
       const revenue = monthBookings
@@ -236,7 +262,7 @@ export default function ReportsPage() {
     }
   }
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
         <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />
@@ -412,30 +438,7 @@ export default function ReportsPage() {
           <div className="bg-slate-900/20 backdrop-blur-md border border-slate-900 rounded-2xl p-6 shadow-xl mb-8">
             <h3 className="text-lg font-bold text-white mb-6">Monthly Revenue & Bookings Breakdown ({selectedYear})</h3>
             <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v >= 1000 ? (v / 1000) + 'k' : v}`} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ background: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
-                    labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                  />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Area yAxisId="left" type="monotone" dataKey="Revenue (₹)" stroke="#4f46e5" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                  <Area yAxisId="right" type="monotone" dataKey="Bookings" stroke="#10b981" strokeWidth={2} fill="none" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <AreaChartComponent data={chartData} />
             </div>
           </div>
         </>
@@ -477,11 +480,7 @@ export default function ReportsPage() {
                     <tr key={b.id} className="hover:bg-slate-900/10 transition-colors text-sm text-slate-300">
                       <td className="py-4 px-6 font-bold text-white">{b.customer_name}</td>
                       <td className="py-4 px-6">
-                        {new Date(b.event_date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {formatIndianDate(b.event_date)}
                       </td>
                       <td className="py-4 px-6">
                         <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 text-xs text-indigo-400">
@@ -538,11 +537,7 @@ export default function ReportsPage() {
                     <tr key={b.id} className="hover:bg-slate-900/10 transition-colors text-sm text-slate-300">
                       <td className="py-4 px-6 font-bold text-white">{b.customer_name}</td>
                       <td className="py-4 px-6">
-                        {new Date(b.event_date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {formatIndianDate(b.event_date)}
                       </td>
                       <td className="py-4 px-6">
                         <span className="px-2 py-0.5 bg-slate-950/50 rounded border border-slate-850 text-xs text-indigo-400">

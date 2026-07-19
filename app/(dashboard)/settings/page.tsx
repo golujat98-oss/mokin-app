@@ -124,6 +124,38 @@ export default function SettingsPage() {
     fetchProfile()
   }, [supabase, router])
 
+  /** Upload a file to the given Storage bucket, return the public URL or null on failure. */
+  const uploadFile = async (
+    file: File,
+    bucket: string
+  ): Promise<string | null> => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('You must be logged in to upload files')
+      return null
+    }
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${bucket}-${Date.now()}.${fileExt}`
+    const filePath = `${user.id}/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, { upsert: true })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      toast.error(`Failed to upload image to ${bucket}. Please try again.`)
+      return null
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath)
+
+    return publicUrl
+  }
+
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     bucket: string,
@@ -135,38 +167,12 @@ export default function SettingsPage() {
 
     setUploading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Unauthenticated')
-
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${bucket}-${Date.now()}.${fileExt}`
-      const filePath = `${fileName}`
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, { upsert: true })
-
-      if (uploadError) {
-        // Fallback to data URL base64 representation if storage bucket is not configured
-        console.warn('Storage upload error, falling back to FileReader', uploadError)
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          setUrl(reader.result as string)
-          toast.success('Image loaded locally (base64 storage)')
-          setUploading(false)
-        }
-        reader.readAsDataURL(file)
-        return
+      const publicUrl = await uploadFile(file, bucket)
+      if (publicUrl) {
+        setUrl(publicUrl)
+        toast.success('Asset uploaded successfully!')
       }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
-
-      setUrl(publicUrl)
-      toast.success('Asset uploaded successfully!')
+      // If publicUrl is null, upload failed and error toast was already shown — do not set any URL
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || 'File upload failed')
@@ -206,7 +212,11 @@ export default function SettingsPage() {
 
       if (profileError) throw profileError
 
-      // 2. Update user metadata
+      // 2. Update user metadata — only save Storage URLs, NEVER base64
+      // Validate that URLs are public Storage URLs (not base64 data URIs)
+      const safeQrUrl = qrUrl && !qrUrl.startsWith('data:') ? qrUrl : ''
+      const safeSignatureUrl = signatureUrl && !signatureUrl.startsWith('data:') ? signatureUrl : ''
+
       const { error: authError } = await supabase.auth.updateUser({
         data: {
           owner_name: ownerName.trim(),
@@ -220,8 +230,8 @@ export default function SettingsPage() {
           invoice_prefix: invoicePrefix.trim(),
           invoice_number: invoiceNumber.trim(),
           invoice_footer: invoiceFooter.trim(),
-          qr_code_url: qrUrl,
-          signature_url: signatureUrl
+          qr_code_url: safeQrUrl,
+          signature_url: safeSignatureUrl
         }
       })
 
@@ -229,6 +239,9 @@ export default function SettingsPage() {
 
       toast.success('Settings and Business Profile saved successfully!')
       router.refresh()
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1000)
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || 'Failed to save configuration settings')

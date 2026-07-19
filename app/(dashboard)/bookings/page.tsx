@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
+import CustomDatePicker from '@/components/bookings/CustomDatePicker'
 
 
 interface Booking {
@@ -371,11 +372,22 @@ export default function BookingsPage() {
   useEffect(() => {
     const isNew = searchParams.get('new') === 'true'
     const editId = searchParams.get('edit')
+    const statusParam = searchParams.get('status')
+    const filterParam = searchParams.get('filter')
+
     if (isNew) {
       handleOpenNew()
     } else if (editId) {
       const b = bookings.find(x => x.id === editId)
       if (b) handleOpenEdit(b)
+    }
+
+    if (statusParam) {
+      setStatusFilter(statusParam)
+    } else if (filterParam === 'dues') {
+      setStatusFilter('dues')
+    } else if (!isNew && !editId) {
+      setStatusFilter('all')
     }
   }, [searchParams, bookings])
 
@@ -481,6 +493,10 @@ export default function BookingsPage() {
 
         if (error) throw error
         toast.success('Booking updated')
+
+        setModalOpen(false)
+        router.replace('/bookings')
+        fetchData()
       } else {
         const { error } = await supabase
           .from('bookings')
@@ -491,11 +507,12 @@ export default function BookingsPage() {
 
         if (error) throw error
         toast.success('Booking created successfully')
-      }
 
-      setModalOpen(false)
-      router.replace('/bookings')
-      fetchData()
+        setModalOpen(false)
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 1000)
+      }
 
     } catch (err: any) {
       console.error(err)
@@ -606,7 +623,9 @@ export default function BookingsPage() {
         b.mobile_number.includes(searchTerm)
       
       const matchesStatus =
-        statusFilter === 'all' || b.status === statusFilter
+        statusFilter === 'all' ? true :
+        statusFilter === 'dues' ? (b.status !== 'cancelled' && b.status !== 'completed' && Number(b.remaining_amount) > 0) :
+        b.status === statusFilter
 
       return matchesSearch && matchesStatus
     })
@@ -680,6 +699,7 @@ export default function BookingsPage() {
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
+            <option value="dues">With Remaining Dues</option>
           </select>
         </div>
       </div>
@@ -1203,12 +1223,11 @@ export default function BookingsPage() {
                     Event Date
                     {hasConflict && <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping ml-2" />}
                   </label>
-                  <input
-                    type="date"
-                    required
+                  <CustomDatePicker
                     value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="block w-full px-3.5 py-2.5 border border-slate-800 rounded-lg bg-slate-950/40 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
+                    onChange={(val) => setEventDate(val)}
+                    bookings={bookings.map(b => ({ event_date: b.event_date, status: b.status }))}
+                    placeholder="Select event date"
                   />
                 </div>
 

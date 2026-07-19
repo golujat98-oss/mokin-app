@@ -18,6 +18,17 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 
+const formatWhatsAppDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  const year = parts[0]
+  const monthIdx = parseInt(parts[1], 10) - 1
+  const day = parseInt(parts[2], 10)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${months[monthIdx]} ${day}, ${year}`
+}
+
 interface Customer {
   id: string
   name: string
@@ -39,6 +50,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
   // Modal State
@@ -77,6 +89,7 @@ export default function CustomersPage() {
   }, [supabase])
 
   useEffect(() => {
+    setMounted(true)
     fetchData()
 
     // Realtime Postgres sync
@@ -212,11 +225,7 @@ export default function CustomersPage() {
     let message = `Hello ${customer.name}, this is regarding your booking arrangements.`
 
     if (eventInfo) {
-      const dateStr = new Date(eventInfo.event_date).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })
+      const dateStr = formatWhatsAppDate(eventInfo.event_date)
       const serviceName = eventInfo.program_name_snapshot || 'event service'
       message = `Hello ${customer.name}, this is regarding your upcoming ${serviceName} booking scheduled on ${dateStr}. Please let us know if you need to coordinate any setup details. Thanks!`
     }
@@ -247,7 +256,7 @@ export default function CustomersPage() {
     )
   }, [customers, searchTerm])
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
         <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />

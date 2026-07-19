@@ -50,6 +50,7 @@ export default function ProgramsPage() {
   const supabase = createClient()
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingProgram, setEditingProgram] = useState<Program | null>(null)
   
@@ -76,6 +77,7 @@ export default function ProgramsPage() {
   }, [supabase])
 
   useEffect(() => {
+    setMounted(true)
     fetchPrograms()
 
     // Real-time synchronization
@@ -176,7 +178,7 @@ export default function ProgramsPage() {
     return <IconComp size={size} className={className} />
   }
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-slate-400">
         <Loader2 className="animate-spin h-6 w-6 text-indigo-500 mr-2" />

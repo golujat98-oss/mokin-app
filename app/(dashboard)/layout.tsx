@@ -307,24 +307,33 @@ export default function DashboardLayout({
       {/* MOBILE COMPACT BOTTOM NAVIGATION BAR */}
       {/* Only rendered on small screens to give quick, thumb-friendly access to primary sections */}
       {!mobileMenuOpen && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 border-t border-slate-800 backdrop-blur-lg flex items-center justify-around px-2 z-30">
-          {navItems.slice(0, 5).map((item) => {
-            const isActive = pathname === item.href
-            const Icon = item.icon
-            return (
-              <Link key={item.name} href={item.href}>
-                <span
-                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-lg transition-all ${
-                    isActive ? 'text-indigo-400' : 'text-slate-500'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="text-[10px] mt-0.5 font-medium">{item.name}</span>
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="md:hidden fixed bottom-4 left-4 right-4 z-30">
+          <nav className="h-16 bg-slate-950/70 border border-white/[0.08] backdrop-blur-xl flex items-center justify-around px-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] relative">
+            {navItems.slice(0, 5).map((item) => {
+              const isActive = pathname === item.href
+              const Icon = item.icon
+              return (
+                <Link key={item.name} href={item.href} className="relative py-1 flex-1 flex justify-center">
+                  <span
+                    className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 relative ${
+                      isActive ? 'text-indigo-450 scale-105 font-bold' : 'text-slate-500 hover:text-slate-350'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="activeTabGlow"
+                        className="absolute inset-0 bg-indigo-500/10 border border-indigo-500/20 rounded-xl -z-10 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <Icon size={18} className={isActive ? 'stroke-[2.5]' : 'stroke-[2]'} />
+                    <span className="text-[9px] mt-1 font-semibold uppercase tracking-wider scale-90">{item.name}</span>
+                  </span>
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
       )}
     </div>
   )
