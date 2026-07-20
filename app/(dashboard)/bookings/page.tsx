@@ -519,21 +519,6 @@ export default function BookingsPage() {
         if (error) throw error
         toast.success('Booking created successfully')
 
-        // Track successful bookings for interstitial ads
-        try {
-          const currentCount = parseInt(localStorage.getItem('booking_success_count') || '0', 10)
-          const newCount = currentCount + 1
-          localStorage.setItem('booking_success_count', newCount.toString())
-          if (newCount >= 5) {
-            localStorage.setItem('booking_success_count', '0')
-            import('@/lib/adService').then(({ AdService }) => {
-              AdService.showInterstitial()
-            }).catch(err => console.error('Failed to trigger interstitial ad:', err))
-          }
-        } catch (e) {
-          console.error('Failed to handle ad booking counter:', e)
-        }
-
         setModalOpen(false)
         setTimeout(() => {
           router.push('/dashboard')
