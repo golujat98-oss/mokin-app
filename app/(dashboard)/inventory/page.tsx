@@ -17,7 +17,6 @@ import {
   Search
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
-import BannerAd from '@/components/ads/BannerAd'
 
 interface InventoryItem {
   id: string
@@ -246,7 +245,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <BannerAd placement="middle" />
 
       {/* SEARCH INPUT */}
       <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900 p-4 rounded-2xl mb-6 shadow-xl relative max-w-md">

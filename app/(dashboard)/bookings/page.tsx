@@ -26,7 +26,6 @@ import {
 import { toast, Toaster } from 'react-hot-toast'
 import { downloadBookingPDF, downloadBookingsListPDF } from '@/components/bookings/BookingContract'
 import CustomDatePicker from '@/components/bookings/CustomDatePicker'
-import BannerAd from '@/components/ads/BannerAd'
 
 
 interface Booking {
@@ -760,7 +759,6 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      <BannerAd placement="middle" />
 
       {/* BOOKINGS TABLE / CARDS */}
       {filteredBookings.length === 0 ? (

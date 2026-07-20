@@ -27,7 +27,6 @@ import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
-import BannerAd from '@/components/ads/BannerAd'
 
 interface DashboardStats {
   totalBookings: number
@@ -456,7 +455,7 @@ export default function DashboardPage() {
             <span className="text-[10px] uppercase font-black tracking-widest bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent px-2.5 py-0.8 bg-purple-500/10 rounded-full border border-purple-500/10 inline-block mb-1">
               {profile.business_name || 'Smart Booking Business'}
             </span>
-            <h1 className="text-2xl sm:text-4.5xl font-black text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-3xl sm:text-5.5xl font-black text-white tracking-tight flex items-center gap-2 leading-none">
               {greeting} 👋
             </h1>
             <p className="text-slate-450 text-xs sm:text-sm font-medium">
@@ -575,7 +574,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <BannerAd placement="middle" />
 
       {/* 3. Next Program Card */}
       <div
