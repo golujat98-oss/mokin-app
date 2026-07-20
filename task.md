@@ -9,3 +9,8 @@
 - [x] Optimize reports page (`app/(dashboard)/reports/page.tsx`)
 - [x] Verify with `npm run lint`
 - [x] Verify with `npm run build`
+- [x] Update `page.tsx` loading skeleton to reflect the new layout
+- [x] Remove the duplicate summary dashboard widget (Today's Summary & Financial Status)
+- [x] Implement the redesigned Next Program Card with aligned icons, text, and same-row dues status
+- [x] Move the Calendar grid upward and stack the Next Program and Dues Tracker widgets in the right column
+- [x] Test and compile the dashboard changes to ensure no build errors

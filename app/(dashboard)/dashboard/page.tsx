@@ -424,11 +424,8 @@ export default function DashboardPage() {
           <MetricSkeleton />
         </div>
 
-        {/* Dashboard Control/Summary Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-[140px] bg-slate-900/30 rounded-3xl animate-pulse" />
-          <div className="h-[140px] bg-slate-900/30 rounded-3xl animate-pulse" />
-        </div>
+        {/* Next Program Skeleton */}
+        <div className="h-[140px] bg-slate-900/30 rounded-3xl animate-pulse" />
 
         {/* Main Grid Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -577,89 +574,91 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 3. Today's Summary & Quick Control Board Widget */}
-      <div className="mt-8 sm:mt-10 bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-purple-500/5 blur-[80px] pointer-events-none" />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Summary Items Grid */}
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Today's Summary</p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-black text-white">{todayBookings.length}</span>
-                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Bookings Scheduled Today</span>
-              </div>
-              <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-bold mt-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Active bookings: {allBookings.filter(b => b.status === 'confirmed').length}
+      {/* 3. Next Program Card */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => nextEvent && router.push(`/bookings?edit=${nextEvent.id}`)}
+        onKeyDown={(e) => nextEvent && e.key === 'Enter' && router.push(`/bookings?edit=${nextEvent.id}`)}
+        className="bg-slate-955/25 backdrop-blur-xl border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between cursor-pointer hover:bg-slate-900/40 active:bg-slate-950/60 active:scale-[0.995] transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 select-none group w-full text-left"
+      >
+        <p className="text-slate-450 font-bold uppercase tracking-wider text-[10px] mb-2">Next Program</p>
+        
+        {nextEvent ? (
+          <div className="space-y-3">
+            {/* Top: Program Name & Icon (left) and Status badge (right) */}
+            <div className="flex items-center justify-between gap-4">
+              <span className="font-extrabold text-sm text-white flex items-center gap-1.5 truncate">
+                <span>{getServiceIcon(nextEvent.program_name_snapshot)}</span>
+                <span className="truncate">{nextEvent.program_name_snapshot || 'General Event'}</span>
+              </span>
+              
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border shrink-0 ${
+                nextEvent.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' :
+                nextEvent.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' :
+                nextEvent.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                'bg-rose-500/10 text-rose-455 border-rose-500/20'
+              }`}>
+                <span className={`w-1 h-1 rounded-full mr-1 shrink-0 ${
+                  nextEvent.status === 'confirmed' ? 'bg-emerald-500' :
+                  nextEvent.status === 'pending' ? 'bg-amber-500' :
+                  nextEvent.status === 'completed' ? 'bg-indigo-500' :
+                  'bg-rose-500'
+                }`} />
+                {nextEvent.status}
               </span>
             </div>
 
-            <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Financial Status</p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-black text-amber-500">₹{stats.totalDues.toLocaleString('en-IN')}</span>
-                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Outstanding Balance</span>
-              </div>
-              <span className="text-[11px] sm:text-xs text-slate-400 mt-2 block font-medium">
-                Business health status: <span className="text-indigo-400 font-bold">Healthy</span>
-              </span>
+            {/* Middle: Date • Time, Venue (single line), Client */}
+            <div className="space-y-1.5 text-xs">
+              <p className="text-indigo-400 font-bold flex items-center gap-1.5">
+                <span>📅</span>
+                <span>
+                  {formatIndianDate(nextEvent.event_date)}
+                  {nextEvent.start_time ? ` • ${format12HourTime(nextEvent.start_time)}` : ''}
+                </span>
+              </p>
+              
+              <p className="text-slate-300 font-medium flex items-center gap-1.5 truncate" title={nextEvent.venue_address || 'Unspecified location'}>
+                <span>📍</span>
+                <span className="truncate">{nextEvent.venue_address || 'Unspecified location'}</span>
+              </p>
+              
+              <p className="text-slate-405 font-semibold flex items-center gap-1.5 truncate">
+                <span>👤</span>
+                <span className="truncate">Client: <span className="text-white font-bold">{nextEvent.customer_name}</span></span>
+              </p>
+            </div>
+
+            {/* Bottom: Due Status Badge */}
+            <div className="pt-2 border-t border-white/[0.03] flex items-center justify-start mt-0.5">
+              {(() => {
+                const remaining = Number(nextEvent.remaining_amount) || 0
+                const isPaid = remaining === 0
+                const isPartiallyPaid = !isPaid && (Number(nextEvent.advance_amount) || 0) > 0
+
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-500">Dues Status:</span>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${
+                      isPaid ? 'bg-emerald-500/10 text-emerald-455 border-emerald-500/15' :
+                      isPartiallyPaid ? 'bg-amber-500/10 text-amber-500 border-amber-500/15 animate-pulse' :
+                      'bg-rose-500/10 text-rose-500 border-rose-500/15'
+                    }`}>
+                      {isPaid ? 'Paid' : isPartiallyPaid ? 'Partial' : 'Unpaid'}
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
           </div>
-
-          {/* Next Program Quick View */}
-          <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-            <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Next Program</p>
-            {nextEvent ? (
-              <div className="mt-2.5 space-y-2.5 text-xs text-left">
-                <p className="font-extrabold text-sm text-white flex items-center gap-1.5 truncate">
-                  <span>🎂</span>
-                  <span className="truncate">{nextEvent.program_name_snapshot || 'General Event'}</span>
-                </p>
-                <p className="text-indigo-400 font-bold text-xs flex items-center gap-1.5">
-                  <span>📅</span>
-                  <span>{formatIndianDate(nextEvent.event_date)}</span>
-                </p>
-                <p className="text-slate-300 font-medium text-xs flex items-center gap-1.5 truncate">
-                  <span>📍</span>
-                  <span className="truncate">{nextEvent.venue_address || 'Unspecified location'}</span>
-                </p>
-                <p className="text-slate-400 font-medium text-xs flex items-center gap-1.5">
-                  <span>🕗</span>
-                  <span>{nextEvent.start_time ? format12HourTime(nextEvent.start_time) : 'Time unspecified'}</span>
-                </p>
-                <p className="text-slate-400 font-semibold text-xs flex items-center gap-1.5 truncate">
-                  <span>👤</span>
-                  <span className="truncate">{nextEvent.customer_name}</span>
-                </p>
-                {(() => {
-                  const remaining = Number(nextEvent.remaining_amount) || 0
-                  const isPaid = remaining === 0
-                  const isPartiallyPaid = !isPaid && (Number(nextEvent.advance_amount) || 0) > 0
-
-                  return (
-                    <div className="pt-2 border-t border-white/[0.03] flex items-center justify-between mt-1">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Dues Status</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' :
-                          isPartiallyPaid ? 'bg-amber-500/10 text-amber-500 border-amber-500/15 animate-pulse' :
-                            'bg-rose-500/10 text-rose-500 border-rose-500/15'
-                        }`}>
-                        {isPaid ? 'Paid' : isPartiallyPaid ? 'Partial' : 'Unpaid'}
-                      </span>
-                    </div>
-                  )
-                })()}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 mt-2 text-left italic">No upcoming programs scheduled.</p>
-            )}
-          </div>
-        </div>
+        ) : (
+          <p className="text-xs text-slate-500 mt-2 text-left italic">No upcoming programs scheduled.</p>
+        )}
       </div>
 
       {/* 4. Main Compact Schedule Overview Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
 
         {/* COMPACT MINI CALENDAR & PROGRAMS WIDGET (Left 2 cols) */}
         <div className="lg:col-span-2 bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-[24px] flex flex-col shadow-2xl relative overflow-hidden min-h-[380px]">
@@ -808,7 +807,7 @@ export default function DashboardPage() {
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Upcoming Programs</h4>
                     <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                       {upcomingBookings.filter(b => b.event_date > todayStr).length === 0 ? (
-                        <p className="text-xs text-slate-500 italic py-1.5">No upcoming programs scheduled.</p>
+                        <p className="text-xs text-slate-550 italic py-1.5">No upcoming programs scheduled.</p>
                       ) : (
                         upcomingBookings.filter(b => b.event_date > todayStr).slice(0, 3).map((b) => (
                           <div key={b.id} className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-colors">
@@ -856,7 +855,7 @@ export default function DashboardPage() {
               <div className="flex flex-col items-center justify-center py-16 text-slate-500 text-center">
                 <Clock className="stroke-[1.5] h-9 w-9 text-slate-650 mb-2 animate-pulse" />
                 <p className="text-xs font-black text-white">No remaining dues</p>
-                <p className="text-[9px] text-slate-500 mt-1 max-w-[150px]">All pending collections have been completed.</p>
+                <p className="text-[9px] text-slate-505 mt-1 max-w-[150px]">All pending collections have been completed.</p>
               </div>
             ) : (
               dueBookings.map((b) => {
@@ -874,7 +873,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={b.id}
-                    className="p-3.5 bg-slate-950/40 border border-white/[0.04] hover:border-white/[0.08] hover:bg-slate-900/20 transition-all duration-250 rounded-2xl group flex flex-col gap-2.5"
+                    className="p-3.5 bg-slate-955/40 border border-white/[0.04] hover:border-white/[0.08] hover:bg-slate-900/20 transition-all duration-250 rounded-2xl group flex flex-col gap-2.5"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
