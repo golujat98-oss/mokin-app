@@ -369,10 +369,11 @@ export default function CalendarPage() {
                           const emoji = getServiceIcon(b.program_name_snapshot)
                           const name = b.program_name_snapshot || b.customer_name || 'Event'
                           let badgeColor = 'bg-slate-500/15 text-slate-200 border border-slate-500/30'
-                          if (b.status === 'confirmed') badgeColor = 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-[0_0_6px_rgba(16,185,129,0.05)]'
-                          else if (b.status === 'pending') badgeColor = 'bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_6px_rgba(245,158,11,0.05)]'
-                          else if (b.status === 'completed') badgeColor = 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 shadow-[0_0_6px_rgba(99,102,241,0.05)]'
-                          else if (b.status === 'cancelled') badgeColor = 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                          const statusLower = (b.status || '').toLowerCase()
+                          if (statusLower === 'confirmed') badgeColor = 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-[0_0_6px_rgba(16,185,129,0.05)]'
+                          else if (statusLower === 'pending') badgeColor = 'bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_6px_rgba(245,158,11,0.05)]'
+                          else if (statusLower === 'completed') badgeColor = 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 shadow-[0_0_6px_rgba(99,102,241,0.05)]'
+                          else if (statusLower === 'cancelled') badgeColor = 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
 
                           return (
                             <div
@@ -398,10 +399,11 @@ export default function CalendarPage() {
                       <div className="flex sm:hidden gap-1 justify-start items-center w-full">
                         {dayBookings.slice(0, 3).map((b) => {
                           let dotColor = 'bg-slate-500'
-                          if (b.status === 'confirmed') dotColor = 'bg-emerald-500'
-                          else if (b.status === 'pending') dotColor = 'bg-amber-500'
-                          else if (b.status === 'completed') dotColor = 'bg-indigo-500'
-                          else if (b.status === 'cancelled') dotColor = 'bg-rose-500'
+                          const statusLower = (b.status || '').toLowerCase()
+                          if (statusLower === 'confirmed') dotColor = 'bg-emerald-500'
+                          else if (statusLower === 'pending') dotColor = 'bg-amber-500'
+                          else if (statusLower === 'completed') dotColor = 'bg-indigo-500'
+                          else if (statusLower === 'cancelled') dotColor = 'bg-rose-500'
                           return (
                             <span
                               key={b.id}

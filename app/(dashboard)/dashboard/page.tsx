@@ -175,7 +175,7 @@ const getServiceIcon = (category: string | null | undefined) => {
 export default function DashboardPage() {
   const supabase = createClient()
   const router = useRouter()
-  
+
   const [stats, setStats] = useState<DashboardStats>({
     totalBookings: 0,
     confirmedBookings: 0,
@@ -286,16 +286,16 @@ export default function DashboardPage() {
       const activeBookingsList: Booking[] = []
       const duesList: Booking[] = []
 
-      totalBookings = bookings.length
       bookings.forEach((booking: Booking) => {
         if (booking.status === 'confirmed') {
           confirmedBookings++
         }
-        if (booking.status !== 'cancelled' && booking.status !== 'completed') {
+        if (Number(booking.remaining_amount) > 0) {
           totalDues += Number(booking.remaining_amount)
-          if (Number(booking.remaining_amount) > 0) {
-            duesList.push(booking)
-          }
+          duesList.push(booking)
+        }
+        if (booking.status !== 'cancelled') {
+          totalBookings++
         }
         activeBookingsList.push(booking)
       });
@@ -453,18 +453,18 @@ export default function DashboardPage() {
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-purple-500/10 blur-[80px] pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-1">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-y-6 md:gap-x-8 relative z-10">
+          <div className="space-y-2.5">
             <span className="text-[10px] uppercase font-black tracking-widest bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent px-2.5 py-0.8 bg-purple-500/10 rounded-full border border-purple-500/10 inline-block mb-1">
               {profile.business_name || 'Smart Booking Business'}
             </span>
             <h1 className="text-2xl sm:text-4.5xl font-black text-white tracking-tight flex items-center gap-2">
               {greeting} 👋
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+            <p className="text-slate-450 text-xs sm:text-sm font-medium">
               Welcome back to your dashboard control panel.
             </p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 text-xs text-slate-500 font-semibold">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-3 text-xs text-slate-500 font-semibold">
               <span className="flex items-center gap-1">📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
               <span>•</span>
               <span className="flex items-center gap-1">🟢 {todayBookings.length} event{todayBookings.length !== 1 ? 's' : ''} today</span>
@@ -474,7 +474,7 @@ export default function DashboardPage() {
           {/* Quick Actions (CTA Box) */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <Link href="/bookings?new=true" className="sm:w-auto">
-              <button className="w-full sm:w-auto relative group overflow-hidden flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-95 cursor-pointer shadow-md">
+              <button className="w-full sm:w-auto relative group overflow-hidden flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-650 text-white font-extrabold text-xs tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-95 cursor-pointer shadow-md">
                 <Plus size={14} className="stroke-[3.5] relative z-10" />
                 <span className="relative z-10">New Booking</span>
               </button>
@@ -494,17 +494,19 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings')}
-          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-indigo-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-indigo-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-indigo-500/35 p-3.5 sm:p-5 rounded-2xl flex flex-col justify-between h-full shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-indigo-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-indigo-500/[0.03] blur-xl pointer-events-none group-hover:bg-indigo-500/[0.06] transition-colors" />
-          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Total Bookings</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{stats.totalBookings}</h3>
-            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Total bookings</span>
+          <div className="flex items-center justify-between w-full gap-2 relative z-10 min-w-0">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight text-left">Total Bookings</span>
+            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+              <Calendar size={14} className="sm:hidden" />
+              <Calendar size={20} className="hidden sm:block stroke-[2]" />
+            </div>
           </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <Calendar size={18} className="sm:hidden" />
-            <Calendar size={20} className="hidden sm:block stroke-[2]" />
+          <div className="space-y-0.5 relative z-10 min-w-0 w-full text-left mt-2.5">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight leading-none">{stats.totalBookings}</h3>
+            <span className="text-[10px] sm:text-[13px] text-slate-300 font-semibold block whitespace-normal break-words mt-1 leading-snug">Total bookings</span>
           </div>
         </div>
 
@@ -514,17 +516,19 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?status=pending')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=pending')}
-          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-amber-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-amber-500/35 p-3.5 sm:p-5 rounded-2xl flex flex-col justify-between h-full shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-amber-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-amber-500/[0.03] blur-xl pointer-events-none group-hover:bg-amber-500/[0.06] transition-colors" />
-          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Pending Bookings</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-500 tracking-tight">{allBookings.filter(b => b.status === 'pending').length}</h3>
-            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Waiting for confirmation</span>
+          <div className="flex items-center justify-between w-full gap-2 relative z-10 min-w-0">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight text-left">Pending Bookings</span>
+            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+              <Clock size={14} className="sm:hidden" />
+              <Clock size={20} className="hidden sm:block stroke-[2]" />
+            </div>
           </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <Clock size={18} className="sm:hidden" />
-            <Clock size={20} className="hidden sm:block stroke-[2]" />
+          <div className="space-y-0.5 relative z-10 min-w-0 w-full text-left mt-2.5">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-amber-500 tracking-tight leading-none">{allBookings.filter(b => { const s = (b.status || '').toLowerCase(); return s === 'pending' || s === 'confirmed'; }).length}</h3>
+            <span className="text-[10px] sm:text-[13px] text-slate-300 font-semibold block whitespace-normal break-words mt-1 leading-snug">Waiting for confirmation</span>
           </div>
         </div>
 
@@ -534,17 +538,19 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?status=completed')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=completed')}
-          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-emerald-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-emerald-500/35 p-3.5 sm:p-5 rounded-2xl flex flex-col justify-between h-full shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-emerald-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-emerald-500/[0.03] blur-xl pointer-events-none group-hover:bg-emerald-500/[0.06] transition-colors" />
-          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Completed Bookings</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">{allBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').length}</h3>
-            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Successfully completed</span>
+          <div className="flex items-center justify-between w-full gap-2 relative z-10 min-w-0">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight text-left">Completed Bookings</span>
+            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+              <CheckCircle size={14} className="sm:hidden" />
+              <CheckCircle size={20} className="hidden sm:block stroke-[2]" />
+            </div>
           </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <CheckCircle size={18} className="sm:hidden" />
-            <CheckCircle size={20} className="hidden sm:block stroke-[2]" />
+          <div className="space-y-0.5 relative z-10 min-w-0 w-full text-left mt-2.5">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight leading-none">{allBookings.filter(b => (b.status || '').toLowerCase() === 'completed').length}</h3>
+            <span className="text-[10px] sm:text-[13px] text-slate-300 font-semibold block whitespace-normal break-words mt-1 leading-snug">Successfully completed</span>
           </div>
         </div>
 
@@ -554,25 +560,27 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?filter=dues')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?filter=dues')}
-          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-rose-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(239,68,68,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-rose-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-rose-500/35 p-3.5 sm:p-5 rounded-2xl flex flex-col justify-between h-full shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(239,68,68,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-rose-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-rose-500/[0.03] blur-xl pointer-events-none group-hover:bg-rose-500/[0.06] transition-colors" />
-          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Remaining Dues</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-500 tracking-tight truncate">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
-            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Pending collection</span>
+          <div className="flex items-center justify-between w-full gap-2 relative z-10 min-w-0">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight text-left">Remaining Dues</span>
+            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 shrink-0 ml-1 relative z-10">
+              <IndianRupee size={14} className="sm:hidden" />
+              <IndianRupee size={20} className="hidden sm:block stroke-[2]" />
+            </div>
           </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 shrink-0 ml-1 relative z-10">
-            <IndianRupee size={18} className="sm:hidden" />
-            <IndianRupee size={20} className="hidden sm:block stroke-[2]" />
+          <div className="space-y-0.5 relative z-10 min-w-0 w-full text-left mt-2.5">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-rose-500 tracking-tight leading-none">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
+            <span className="text-[10px] sm:text-[13px] text-slate-300 font-semibold block whitespace-normal break-words mt-1 leading-snug">Pending collection</span>
           </div>
         </div>
       </div>
 
       {/* 3. Today's Summary & Quick Control Board Widget */}
-      <div className="bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-3xl relative overflow-hidden shadow-2xl">
+      <div className="mt-8 sm:mt-10 bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-3xl relative overflow-hidden shadow-2xl">
         <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-purple-500/5 blur-[80px] pointer-events-none" />
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Summary Items Grid */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -580,7 +588,7 @@ export default function DashboardPage() {
               <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Today's Summary</p>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-3xl font-black text-white">{todayBookings.length}</span>
-                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Active Events Today</span>
+                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Bookings Scheduled Today</span>
               </div>
               <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-bold mt-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -629,15 +637,14 @@ export default function DashboardPage() {
                   const remaining = Number(nextEvent.remaining_amount) || 0
                   const isPaid = remaining === 0
                   const isPartiallyPaid = !isPaid && (Number(nextEvent.advance_amount) || 0) > 0
-                  
+
                   return (
                     <div className="pt-2 border-t border-white/[0.03] flex items-center justify-between mt-1">
                       <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Dues Status</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                        isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' :
-                        isPartiallyPaid ? 'bg-amber-500/10 text-amber-500 border-amber-500/15 animate-pulse' :
-                        'bg-rose-500/10 text-rose-500 border-rose-500/15'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' :
+                          isPartiallyPaid ? 'bg-amber-500/10 text-amber-500 border-amber-500/15 animate-pulse' :
+                            'bg-rose-500/10 text-rose-500 border-rose-500/15'
+                        }`}>
                         {isPaid ? 'Paid' : isPartiallyPaid ? 'Partial' : 'Unpaid'}
                       </span>
                     </div>
@@ -653,7 +660,7 @@ export default function DashboardPage() {
 
       {/* 4. Main Compact Schedule Overview Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* COMPACT MINI CALENDAR & PROGRAMS WIDGET (Left 2 cols) */}
         <div className="lg:col-span-2 bg-[#0b1020]/30 backdrop-blur-xl border border-white/[0.04] p-5 rounded-[24px] flex flex-col shadow-2xl relative overflow-hidden min-h-[380px]">
           {/* Subtle neon accents */}
@@ -666,7 +673,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full relative z-10">
-              
+
               {/* Left Column: Mini Calendar Date Grid */}
               <div className="flex flex-col justify-between gap-4 border-b md:border-b-0 md:border-r border-white/[0.04] pb-5 md:pb-0 md:pr-5">
                 <div className="flex items-center justify-between">
@@ -865,8 +872,8 @@ export default function DashboardPage() {
                 const paidPercent = Math.min(100, Math.max(0, Math.round((paid / total) * 100)))
 
                 return (
-                  <div 
-                    key={b.id} 
+                  <div
+                    key={b.id}
                     className="p-3.5 bg-slate-950/40 border border-white/[0.04] hover:border-white/[0.08] hover:bg-slate-900/20 transition-all duration-250 rounded-2xl group flex flex-col gap-2.5"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -879,7 +886,7 @@ export default function DashboardPage() {
                           <p className="text-[9px] text-slate-500 font-bold mt-0.5">{formatIndianDate(b.event_date)}</p>
                         </div>
                       </div>
-                      
+
                       <div className="text-right shrink-0">
                         <span className="inline-block text-[10px] font-black text-amber-450 bg-amber-500/10 border border-amber-500/15 px-2.5 py-0.5 rounded-full leading-none">
                           ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
@@ -957,7 +964,7 @@ export default function DashboardPage() {
                       .slice(0, 2)
                       .join('')
                       .toUpperCase() || '👤'
-                    
+
                     return (
                       <tr key={b.id} className="hover:bg-white/[0.02] transition-colors duration-150 group">
                         <td className="py-3.5 px-4 font-medium text-white">
@@ -990,18 +997,16 @@ export default function DashboardPage() {
                           )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.8 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                            b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' :
-                            b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' :
-                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                            'bg-rose-500/10 text-rose-455 border-rose-500/20'
-                          }`}>
-                            <span className={`w-1 h-1 rounded-full mr-1.5 shrink-0 ${
-                              b.status === 'confirmed' ? 'bg-emerald-500' :
-                              b.status === 'pending' ? 'bg-amber-500' :
-                              b.status === 'completed' ? 'bg-indigo-500' :
-                              'bg-rose-500'
-                            }`} />
+                          <span className={`inline-flex items-center px-2.5 py-0.8 rounded-full text-[9px] font-black uppercase tracking-wider border ${b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' :
+                              b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' :
+                                b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                  'bg-rose-500/10 text-rose-455 border-rose-500/20'
+                            }`}>
+                            <span className={`w-1 h-1 rounded-full mr-1.5 shrink-0 ${b.status === 'confirmed' ? 'bg-emerald-500' :
+                                b.status === 'pending' ? 'bg-amber-500' :
+                                  b.status === 'completed' ? 'bg-indigo-500' :
+                                    'bg-rose-500'
+                              }`} />
                             {b.status}
                           </span>
                         </td>
@@ -1061,12 +1066,11 @@ export default function DashboardPage() {
                         <h4 className="text-lg font-bold text-white tracking-tight">{b.program_name_snapshot || 'General Event'}</h4>
                         <p className="text-xs text-slate-400 mt-0.5">{formatIndianDate(b.event_date)}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto tracking-wide uppercase ${
-                        b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' :
-                        b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border border-amber-500/20' :
-                        b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                        'bg-rose-500/10 text-rose-455 border border-rose-500/20'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto tracking-wide uppercase ${b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' :
+                          b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border border-amber-500/20' :
+                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                              'bg-rose-500/10 text-rose-455 border border-rose-500/20'
+                        }`}>
                         {b.status}
                       </span>
                     </div>

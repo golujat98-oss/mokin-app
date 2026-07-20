@@ -307,7 +307,7 @@ export default function DashboardLayout({
 
       {/* Floating Action Button (FAB) for Mobile Quick Bookings */}
       {!mobileMenuOpen && (
-        <div className="md:hidden fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-40">
+        <div className="md:hidden fixed bottom-[calc(7.8rem+env(safe-area-inset-bottom))] right-4 z-40">
           <Link href="/bookings?new=true">
             <button className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-650 text-white flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer">
               <Plus size={22} className="stroke-[3.5]" />
@@ -320,14 +320,14 @@ export default function DashboardLayout({
       {/* Only rendered on small screens to give quick, thumb-friendly access to primary sections */}
       {!mobileMenuOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 border-t border-slate-900 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 px-4 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] backdrop-blur-md">
-          <nav className="h-16 bg-slate-900/40 border border-white/[0.05] flex items-center justify-around px-2 rounded-2xl relative">
+          <nav className="h-16 bg-slate-900/40 border border-white/[0.05] grid grid-cols-5 items-center justify-items-center rounded-2xl relative w-full">
             {navItems.slice(0, 5).map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
               return (
-                <Link key={item.name} href={item.href} className="relative py-1 flex-1 flex justify-center">
+                <Link key={item.name} href={item.href} className="relative py-1 w-full flex justify-center">
                   <span
-                    className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 relative ${
+                    className={`flex flex-col items-center justify-center w-full max-w-[64px] h-12 rounded-xl transition-all duration-300 relative ${
                       isActive ? 'text-indigo-400 scale-105 font-bold' : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
@@ -339,7 +339,7 @@ export default function DashboardLayout({
                       />
                     )}
                     <Icon size={20} className={isActive ? 'stroke-[2.5]' : 'stroke-[2]'} />
-                    <span className="text-[10px] mt-0.5 font-bold uppercase tracking-wider">{item.name}</span>
+                    <span className="text-[9px] min-[375px]:text-[10px] mt-0.5 font-extrabold uppercase tracking-normal text-center truncate w-full px-0.5">{item.name}</span>
                   </span>
                 </Link>
               )

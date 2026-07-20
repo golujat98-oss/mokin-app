@@ -383,7 +383,7 @@ export default function BookingsPage() {
     }
 
     if (statusParam) {
-      setStatusFilter(statusParam)
+      setStatusFilter(statusParam.toLowerCase())
     } else if (filterParam === 'dues') {
       setStatusFilter('dues')
     } else if (!isNew && !editId) {
@@ -640,14 +640,32 @@ export default function BookingsPage() {
         b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.mobile_number.includes(searchTerm)
       
+      const statusLower = (b.status || '').toLowerCase()
       const matchesStatus =
-        statusFilter === 'all' ? true :
-        statusFilter === 'dues' ? (b.status !== 'cancelled' && b.status !== 'completed' && Number(b.remaining_amount) > 0) :
-        b.status === statusFilter
+        statusFilter === 'all' ? (statusLower !== 'cancelled') :
+        statusFilter === 'dues' ? (Number(b.remaining_amount) > 0) :
+        statusFilter === 'pending' || statusFilter === 'confirmed' ? (statusLower === 'pending' || statusLower === 'confirmed') :
+        statusLower === statusFilter.toLowerCase()
 
       return matchesSearch && matchesStatus
     })
   }, [bookings, searchTerm, statusFilter])
+
+  const emptyStateText = useMemo(() => {
+    switch (statusFilter.toLowerCase()) {
+      case 'pending':
+      case 'confirmed':
+        return 'No pending or confirmed bookings found.'
+      case 'completed':
+        return 'No completed bookings found.'
+      case 'cancelled':
+        return 'No cancelled bookings found.'
+      case 'dues':
+        return 'No bookings with remaining dues found.'
+      default:
+        return 'No booking records found.'
+    }
+  }, [statusFilter])
 
   if (loading) {
     return (
@@ -722,8 +740,7 @@ export default function BookingsPage() {
             className="block px-3 py-2 border border-slate-800 rounded-xl bg-slate-950/40 text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm cursor-pointer"
           >
             <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending / Confirmed</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
             <option value="dues">With Remaining Dues</option>
@@ -735,7 +752,7 @@ export default function BookingsPage() {
       {filteredBookings.length === 0 ? (
         <div className="text-center py-16 bg-slate-900/20 border border-slate-900 rounded-2xl">
           <Calendar className="h-10 w-10 text-slate-600 mx-auto mb-2" />
-          <p className="text-slate-400 text-sm">No booking records found.</p>
+          <p className="text-slate-400 text-sm">{emptyStateText}</p>
         </div>
       ) : (
         <>
@@ -804,9 +821,9 @@ export default function BookingsPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                          b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                          b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                          (b.status || '').toLowerCase() === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          (b.status || '').toLowerCase() === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                          (b.status || '').toLowerCase() === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
                           'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                         }`}>
                           {b.status}
@@ -981,9 +998,9 @@ export default function BookingsPage() {
                   {/* 5. Status Section (Vertically centered premium pill badge) */}
                   <div className="flex items-center justify-center p-1">
                     <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
-                      b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                      b.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                      b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                      (b.status || '').toLowerCase() === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                      (b.status || '').toLowerCase() === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                      (b.status || '').toLowerCase() === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
                       'bg-rose-500/10 text-rose-400 border-rose-500/20'
                     }`}>
                       {b.status}
