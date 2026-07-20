@@ -19,7 +19,7 @@ export const AD_CONFIG = {
     format: 'iframe',
   } as AdPlacementConfig,
   middle: {
-    zoneId: '426d84b6522644d6827b82837d66fa25_middle',
+    zoneId: 'f835c643af278e8fd90e7fb244c14385',
     width: 300,
     height: 250,
     provider: 'adsterra',
@@ -27,7 +27,7 @@ export const AD_CONFIG = {
     format: 'iframe',
   } as AdPlacementConfig,
   bottom: {
-    zoneId: '426d84b6522644d6827b82837d66fa25_bottom',
+    zoneId: '6944520e8c7c4d0e08952386d172e80f',
     width: 320,
     height: 50,
     provider: 'adsterra',
