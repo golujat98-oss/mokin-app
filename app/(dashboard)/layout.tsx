@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import QuickLock from '@/components/auth/QuickLock'
 import BannerAd from '@/components/ads/BannerAd'
+import CustomBanner from '@/components/ads/CustomBanner'
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -304,7 +305,7 @@ export default function DashboardLayout({
         <main className="flex-1 overflow-y-auto p-4 pb-48 md:p-8 space-y-4">
           <BannerAd placement="top" />
           <div>{children}</div>
-          <BannerAd placement="bottom" />
+          <CustomBanner />
         </main>
       </div>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { AD_CONFIG } from '@/lib/adConfig'
+import { AD_CONFIG, AdPlacementConfig } from '@/lib/adConfig'
 
 interface BannerAdProps {
   placement: 'top' | 'middle' | 'bottom'
@@ -12,7 +12,7 @@ export default function BannerAd({ placement }: BannerAdProps) {
   const adRef = useRef<HTMLDivElement>(null)
   
   const configKey = placement === 'top' ? 'dashboard_top' : placement
-  const config = AD_CONFIG[configKey as keyof typeof AD_CONFIG]
+  const config = AD_CONFIG[configKey] as AdPlacementConfig
   
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)

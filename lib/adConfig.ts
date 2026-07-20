@@ -9,6 +9,15 @@ export interface AdPlacementConfig {
   format: 'iframe';
 }
 
+export interface CustomAdConfig {
+  visible: boolean;
+  title: string;
+  subtitle: string;
+  button: string;
+  image: string;
+  link: string;
+}
+
 export const AD_CONFIG = {
   dashboard_top: {
     zoneId: '6944520e8c7c4d0e08952386d172e80f',
@@ -34,4 +43,12 @@ export const AD_CONFIG = {
     visible: true,
     format: 'iframe',
   } as AdPlacementConfig,
+  bottomCustom: {
+    visible: true,
+    title: "@golu_jat_98",
+    subtitle: "Follow For Daily Reels",
+    button: "FOLLOW",
+    image: "/ads/profile.jpg",
+    link: "https://instagram.com/golu_jat_98",
+  } as CustomAdConfig,
 };
