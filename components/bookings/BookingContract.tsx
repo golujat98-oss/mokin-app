@@ -275,6 +275,162 @@ export async function downloadBookingPDF(booking: any, profile: any) {
   }
 }
 
+export async function downloadBookingsListPDF(bookings: any[], profile: any) {
+  if (typeof window === 'undefined') return
+
+  const html2canvas = (await import('html2canvas')).default
+  const { jsPDF } = await import('jspdf')
+  
+  const safeBusinessName = profile?.business_name || 'My Business'
+  const safeBusinessAddress = profile?.business_address || ''
+  
+  // Calculate summary metrics
+  const activeBookings = bookings.filter(b => b.status !== 'cancelled')
+  const totalBookings = bookings.length
+  const totalRevenue = activeBookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0)
+  const totalAdvance = activeBookings.reduce((sum, b) => sum + Number(b.advance_amount || 0), 0)
+  const totalDues = activeBookings.reduce((sum, b) => sum + Number(b.remaining_amount || 0), 0)
+
+  const element = document.createElement('div')
+  element.style.position = 'absolute'
+  element.style.left = '-9999px'
+  element.style.top = '0'
+  element.style.width = '800px'
+  element.style.backgroundColor = '#ffffff'
+  element.style.color = '#334155'
+  element.style.boxSizing = 'border-box'
+
+  let rowsHtml = ''
+  bookings.forEach((b) => {
+    const remaining = Number(b.remaining_amount) || 0
+    let dueStyle = 'color: #10b981; font-weight: 700;'
+    let dueLabel = 'Paid'
+    if (remaining > 0) {
+      dueStyle = 'color: #f59e0b; font-weight: 700;'
+      dueLabel = `₹${remaining.toLocaleString('en-IN')}`
+    }
+    
+    let statusBg = '#fee2e2'
+    let statusColor = '#ef4444'
+    if (b.status === 'confirmed') {
+      statusBg = '#d1fae5'
+      statusColor = '#10b981'
+    } else if (b.status === 'completed') {
+      statusBg = '#e0e7ff'
+      statusColor = '#4f46e5'
+    } else if (b.status === 'pending') {
+      statusBg = '#fef3c7'
+      statusColor = '#d97706'
+    }
+
+    rowsHtml += `
+      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 10px;">
+        <td style="padding: 10px 8px; font-weight: 600; color: #0f172a;">
+          <div>${b.customer_name}</div>
+          <div style="font-size: 8px; color: #64748b; font-weight: normal; margin-top: 2px;">${b.mobile_number}</div>
+        </td>
+        <td style="padding: 10px 8px; color: #334155;">${formatIndianDate(b.event_date)}</td>
+        <td style="padding: 10px 8px; color: #4f46e5; font-weight: 600;">${b.program_name_snapshot || 'General'}</td>
+        <td style="padding: 10px 8px; text-align: right; font-weight: 600;">₹${(Number(b.total_amount) || 0).toLocaleString('en-IN')}</td>
+        <td style="padding: 10px 8px; text-align: right; color: #10b981;">₹${(Number(b.advance_amount) || 0).toLocaleString('en-IN')}</td>
+        <td style="padding: 10px 8px; text-align: right; ${dueStyle}">${dueLabel}</td>
+        <td style="padding: 10px 8px; text-align: center;">
+          <span style="background-color: ${statusBg}; color: ${statusColor}; padding: 3px 8px; border-radius: 9999px; font-size: 8px; font-weight: 700; text-transform: uppercase;">
+            ${b.status}
+          </span>
+        </td>
+      </tr>
+    `
+  })
+
+  element.innerHTML = `
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; background: #ffffff; min-height: 1120px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px;">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">${safeBusinessName}</h2>
+            ${safeBusinessAddress ? `<p style="margin: 0; font-size: 11px; color: #64748b;">${safeBusinessAddress}</p>` : ''}
+            <p style="margin: 4px 0 0 0; font-size: 10px; color: #94a3b8; font-weight: 600;">BOOKINGS SUMMARY REPORT</p>
+          </div>
+          <div style="text-align: right;">
+            <h1 style="font-size: 18px; font-weight: 900; color: #4f46e5; margin: 0 0 4px 0;">REPORT</h1>
+            <p style="margin: 0; font-size: 10px; color: #64748b;">Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+          </div>
+        </div>
+
+        <!-- Metrics cards -->
+        <div style="display: flex; gap: 12px; margin-bottom: 24px; box-sizing: border-box;">
+          <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background-color: #f8fafc; text-align: center;">
+            <div style="font-size: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Total Bookings</div>
+            <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalBookings}</div>
+          </div>
+          <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background-color: #f8fafc; text-align: center;">
+            <div style="font-size: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Total Revenue</div>
+            <div style="font-size: 16px; font-weight: 800; color: #4f46e5; margin-top: 4px;">₹${totalRevenue.toLocaleString('en-IN')}</div>
+          </div>
+          <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background-color: #f8fafc; text-align: center;">
+            <div style="font-size: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Total Collected</div>
+            <div style="font-size: 16px; font-weight: 800; color: #10b981; margin-top: 4px;">₹${totalAdvance.toLocaleString('en-IN')}</div>
+          </div>
+          <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background-color: #f8fafc; text-align: center;">
+            <div style="font-size: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Outstanding Dues</div>
+            <div style="font-size: 16px; font-weight: 800; color: #f59e0b; margin-top: 4px;">₹${totalDues.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <table style="width: 100%; border-collapse: collapse; box-sizing: border-box;">
+          <thead>
+            <tr style="background: #0f172a; color: #ffffff; font-size: 9px; text-transform: uppercase; font-weight: 700;">
+              <th style="padding: 10px 8px; text-align: left;">Client Details</th>
+              <th style="padding: 10px 8px; text-align: left;">Date</th>
+              <th style="padding: 10px 8px; text-align: left;">Program</th>
+              <th style="padding: 10px 8px; text-align: right; width: 90px;">Total</th>
+              <th style="padding: 10px 8px; text-align: right; width: 90px;">Advance</th>
+              <th style="padding: 10px 8px; text-align: right; width: 90px;">Balance</th>
+              <th style="padding: 10px 8px; text-align: center; width: 90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #94a3b8;">
+        <span>This report compiles live database transaction logs.</span>
+        <span style="font-weight: 700; color: #4f46e5; text-transform: uppercase; tracking-wider: 0.05em;">Generated by Smart Booking Pro</span>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(element)
+
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    })
+    const imgData = canvas.toDataURL('image/png')
+
+    const pdf = new jsPDF('p', 'pt', 'a4')
+    const imgWidth = 595.28
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+    pdf.save(`Bookings_Report_${new Date().toISOString().split('T')[0]}.pdf`)
+  } catch (err) {
+    console.error('jsPDF list generation error:', err)
+    throw err
+  } finally {
+    document.body.removeChild(element)
+  }
+}
+
 // Default export placeholder so it doesn't break page imports until page is modified
 export default function BookingContractPlaceholder() {
   return null

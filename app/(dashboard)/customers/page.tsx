@@ -306,9 +306,21 @@ export default function CustomersPage() {
 
       {/* CUSTOMERS CARDS GRID */}
       {filteredCustomers.length === 0 ? (
-        <div className="text-center py-16 bg-slate-900/20 border border-slate-900 rounded-2xl">
-          <Users className="h-10 w-10 text-slate-700 mx-auto mb-2" />
-          <p className="text-slate-400 text-sm">No customer records found.</p>
+        <div className="flex flex-col items-center justify-center text-center py-20 bg-slate-950/20 border border-white/[0.04] rounded-[24px] p-6 shadow-inner relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-indigo-500/[0.02] blur-2xl pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 shadow-sm animate-pulse">
+            <Users size={28} className="stroke-[1.8]" />
+          </div>
+          <h3 className="text-xl font-extrabold text-white tracking-tight">No customer records found</h3>
+          <p className="text-sm text-slate-400 max-w-sm mt-2 leading-relaxed font-medium">
+            Create new client accounts to track event programs, coordinate schedules, and manage billing contracts seamlessly.
+          </p>
+          <button
+            onClick={handleOpenNew}
+            className="mt-6 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-md shadow-indigo-600/15 active:scale-95 cursor-pointer"
+          >
+            <Plus size={14} className="stroke-[2.5]" /> Add Your First Customer
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -317,26 +329,26 @@ export default function CustomersPage() {
             return (
               <div
                 key={customer.id}
-                className="bg-slate-900/30 backdrop-blur-md border border-slate-900 hover:border-slate-850 rounded-2xl p-5 flex flex-col justify-between shadow-xl transition-all"
+                className="bg-slate-900/30 backdrop-blur-md border border-slate-900 hover:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl transition-all"
               >
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="text-base font-bold text-white tracking-wide">{customer.name}</h3>
-                      <p className="text-xs text-slate-500 font-semibold mt-0.5">{customer.mobile_number}</p>
+                      <h3 className="text-lg font-extrabold text-white tracking-wide">{customer.name}</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-semibold mt-0.5">{customer.mobile_number}</p>
                     </div>
                     {/* Action icons */}
                     <div className="flex gap-1">
                       <button
                         onClick={() => handleOpenEdit(customer)}
-                        className="p-1.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white"
+                        className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
                         title="Edit details"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={() => handleDelete(customer.id)}
-                        className="p-1.5 rounded hover:bg-rose-950/20 text-slate-500 hover:text-rose-400"
+                        className="p-1.5 rounded hover:bg-rose-950/20 text-slate-400 hover:text-rose-400"
                         title="Delete customer"
                       >
                         <Trash2 size={13} />
@@ -346,7 +358,7 @@ export default function CustomersPage() {
 
                   {/* Customer General Notes */}
                   {customer.notes ? (
-                    <p className="text-xs text-slate-400 leading-relaxed bg-slate-950/30 p-2.5 rounded-lg border border-slate-950/60 mb-4 truncate max-h-[50px]">
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/30 p-2.5 rounded-lg border border-slate-950/60 mb-4 truncate max-h-[50px] font-medium">
                       {customer.notes}
                     </p>
                   ) : (
@@ -357,14 +369,14 @@ export default function CustomersPage() {
                   {eventInfo ? (
                     <div className="flex items-center gap-2 p-2 bg-indigo-500/5 rounded-xl border border-indigo-500/10 mb-4 text-slate-300">
                       <Calendar size={13} className="text-indigo-400 shrink-0" />
-                      <span className="text-[10px] truncate">
+                      <span className="text-xs truncate">
                         Closest booking: <span className="font-semibold text-white">{eventInfo.event_date}</span> ({eventInfo.program_name_snapshot})
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 p-2 bg-slate-950/20 rounded-xl border border-slate-900/60 mb-4 text-slate-500">
+                    <div className="flex items-center gap-2 p-2 bg-slate-950/20 rounded-xl border border-slate-900/60 mb-4 text-slate-400">
                       <AlertCircle size={13} className="shrink-0" />
-                      <span className="text-[10px]">No active event bookings logged</span>
+                      <span className="text-xs">No active event bookings logged</span>
                     </div>
                   )}
                 </div>
@@ -373,7 +385,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-3 border-t border-slate-900/80 pt-4 mt-2">
                   <a
                     href={getPhoneCallLink(customer.mobile_number)}
-                    className="flex items-center justify-center py-2 border border-slate-800 rounded-xl text-xs font-semibold text-slate-300 bg-slate-950/20 hover:bg-slate-800 transition-colors cursor-pointer"
+                    className="flex items-center justify-center py-2.5 border border-slate-800 rounded-xl text-xs font-semibold text-slate-350 bg-slate-955/20 hover:bg-slate-800 transition-colors cursor-pointer min-h-[44px]"
                   >
                     <Phone size={13} className="mr-2 text-indigo-400" />
                     Call Client
@@ -382,9 +394,9 @@ export default function CustomersPage() {
                     href={getWhatsAppLink(customer)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center py-2 border border-slate-800 rounded-xl text-xs font-semibold text-slate-350 bg-slate-950/20 hover:bg-emerald-950/10 hover:border-emerald-900/40 hover:text-emerald-400 transition-all cursor-pointer"
+                    className="flex items-center justify-center py-2.5 border border-slate-800 rounded-xl text-xs font-semibold text-slate-350 bg-slate-955/20 hover:bg-emerald-950/10 hover:border-emerald-900/40 hover:text-emerald-400 transition-all cursor-pointer min-h-[44px]"
                   >
-                    <MessageCircle size={13} className="mr-2 text-emerald-400 animate-pulse" />
+                    <MessageCircle size={13} className="mr-2 text-emerald-400" />
                     WhatsApp
                   </a>
                 </div>

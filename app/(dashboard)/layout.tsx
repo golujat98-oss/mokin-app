@@ -19,7 +19,8 @@ import {
   User,
   Loader2,
   BarChart3,
-  PhoneCall
+  PhoneCall,
+  Plus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuickLock from '@/components/auth/QuickLock'
@@ -164,7 +165,7 @@ export default function DashboardLayout({
 
         {/* User Profile & Lock/Logout */}
         <div className="p-4.5 border-t border-slate-900 bg-slate-950/40">
-          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-850 hover:bg-slate-900/60 transition-all duration-200 shadow-inner group cursor-default">
+          <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 hover:bg-slate-900/60 transition-all duration-200 shadow-inner group cursor-default">
             <div className="w-8.5 h-8.5 rounded-full bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center text-indigo-400 shadow-sm group-hover:scale-105 transition-transform duration-200">
               <User size={15} className="stroke-[2.5]" />
             </div>
@@ -177,14 +178,14 @@ export default function DashboardLayout({
             <button
               onClick={triggerSoftLock}
               title="Quick Lock"
-              className="flex-1 h-9 rounded-lg bg-slate-900/50 hover:bg-slate-900 border border-slate-850 text-slate-450 hover:text-indigo-400 flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
+              className="flex-1 h-9 rounded-lg bg-slate-900/50 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-indigo-400 flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
             >
               <Lock size={14} className="stroke-[2]" />
             </button>
             <button
               onClick={handleLogout}
               title="Sign Out"
-              className="flex-1 h-9 rounded-lg bg-slate-900/50 hover:bg-rose-500/10 hover:border-rose-500/20 border border-slate-850 text-slate-450 hover:text-rose-455 flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
+              className="flex-1 h-9 rounded-lg bg-slate-900/50 hover:bg-rose-500/10 hover:border-rose-500/20 border border-slate-800 text-slate-400 hover:text-rose-400 flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
             >
               <LogOut size={14} className="stroke-[2]" />
             </button>
@@ -193,7 +194,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* MOBILE HEADER & CONTAINER */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10 pb-16 md:pb-0">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10 md:pb-0">
         {/* Mobile Header Bar */}
         <header className="md:hidden h-16 flex items-center justify-between px-4 bg-slate-900/30 border-b border-slate-900 backdrop-blur-xl">
           <div className="flex items-center gap-2">
@@ -299,16 +300,27 @@ export default function DashboardLayout({
         </AnimatePresence>
 
         {/* MAIN ROUTE CONTENT SCROLLABLE VIEW */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 pb-36 md:p-8">
           {children}
         </main>
       </div>
 
+      {/* Floating Action Button (FAB) for Mobile Quick Bookings */}
+      {!mobileMenuOpen && (
+        <div className="md:hidden fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-40">
+          <Link href="/bookings?new=true">
+            <button className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-650 text-white flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+              <Plus size={22} className="stroke-[3.5]" />
+            </button>
+          </Link>
+        </div>
+      )}
+
       {/* MOBILE COMPACT BOTTOM NAVIGATION BAR */}
       {/* Only rendered on small screens to give quick, thumb-friendly access to primary sections */}
       {!mobileMenuOpen && (
-        <div className="md:hidden fixed bottom-4 left-4 right-4 z-30">
-          <nav className="h-16 bg-slate-950/70 border border-white/[0.08] backdrop-blur-xl flex items-center justify-around px-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] relative">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 border-t border-slate-900 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 px-4 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] backdrop-blur-md">
+          <nav className="h-16 bg-slate-900/40 border border-white/[0.05] flex items-center justify-around px-2 rounded-2xl relative">
             {navItems.slice(0, 5).map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
@@ -316,7 +328,7 @@ export default function DashboardLayout({
                 <Link key={item.name} href={item.href} className="relative py-1 flex-1 flex justify-center">
                   <span
                     className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 relative ${
-                      isActive ? 'text-indigo-450 scale-105 font-bold' : 'text-slate-500 hover:text-slate-350'
+                      isActive ? 'text-indigo-400 scale-105 font-bold' : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
                     {isActive && (
@@ -326,8 +338,8 @@ export default function DashboardLayout({
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <Icon size={18} className={isActive ? 'stroke-[2.5]' : 'stroke-[2]'} />
-                    <span className="text-[9px] mt-1 font-semibold uppercase tracking-wider scale-90">{item.name}</span>
+                    <Icon size={20} className={isActive ? 'stroke-[2.5]' : 'stroke-[2]'} />
+                    <span className="text-[10px] mt-0.5 font-bold uppercase tracking-wider">{item.name}</span>
                   </span>
                 </Link>
               )

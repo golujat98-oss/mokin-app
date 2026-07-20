@@ -319,12 +319,12 @@ export default function CalendarPage() {
               const isSelected = selectedDayStr === cell.dateStr
               const isToday = cell.dateStr === todayStr
 
-              let cellStyle = `relative rounded-xl p-2 flex flex-col justify-between min-h-[85px] sm:min-h-[110px] md:min-h-[120px] select-none transition-all duration-200 ease-out border text-left `
+              let cellStyle = `relative rounded-xl p-2 flex flex-col justify-between min-h-[56px] aspect-[4/3] sm:aspect-auto sm:min-h-[110px] md:min-h-[120px] select-none transition-all duration-200 ease-out border text-left `
 
               if (!cell.isCurrentMonth) {
-                cellStyle += `bg-slate-950/5 border-transparent text-slate-750 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
+                cellStyle += `bg-slate-950/5 border-transparent text-slate-700 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
               } else if (isSelected) {
-                cellStyle += `bg-indigo-650 border-transparent text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.04] active:scale-95 cursor-pointer`
+                cellStyle += `bg-indigo-600 border-transparent text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.04] active:scale-95 cursor-pointer`
               } else {
                 cellStyle += `bg-slate-950/30 border-slate-900/60 text-slate-350 hover:border-slate-800 hover:bg-slate-900/10 hover:scale-[1.04] active:scale-95 cursor-pointer `
                 
@@ -343,8 +343,12 @@ export default function CalendarPage() {
                   className={cellStyle}
                 >
                   <div className="flex justify-between items-center w-full mb-1 shrink-0">
-                    <span className={`text-xs font-extrabold ${
-                      !cell.isCurrentMonth ? '' : isSelected ? 'text-white' : isToday ? 'text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-md border border-indigo-500/20' : hasOverlaps ? 'text-amber-500' : 'text-slate-450'
+                    <span className={`text-xs font-extrabold flex items-center justify-center rounded-full shrink-0 ${
+                      !cell.isCurrentMonth ? '' :
+                      isSelected ? 'text-white w-5 h-5' :
+                      isToday ? 'bg-indigo-500 text-white w-5 h-5 shadow-sm shadow-indigo-500/25' :
+                      hasOverlaps ? 'text-amber-500 w-5 h-5' :
+                      'text-slate-400 w-5 h-5'
                     }`}>
                       {cell.day}
                     </span>
@@ -364,17 +368,17 @@ export default function CalendarPage() {
                         {dayBookings.slice(0, 2).map((b) => {
                           const emoji = getServiceIcon(b.program_name_snapshot)
                           const name = b.program_name_snapshot || b.customer_name || 'Event'
-                          let badgeColor = 'bg-slate-550/10 text-slate-400 border border-slate-500/15'
-                          if (b.status === 'confirmed') badgeColor = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 shadow-[0_0_6px_rgba(16,185,129,0.05)]'
-                          else if (b.status === 'pending') badgeColor = 'bg-amber-500/10 text-amber-400 border border-amber-500/15 shadow-[0_0_6px_rgba(245,158,11,0.05)]'
-                          else if (b.status === 'completed') badgeColor = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/15 shadow-[0_0_6px_rgba(99,102,241,0.05)]'
-                          else if (b.status === 'cancelled') badgeColor = 'bg-rose-500/10 text-rose-455 border border-rose-500/15'
+                          let badgeColor = 'bg-slate-500/15 text-slate-200 border border-slate-500/30'
+                          if (b.status === 'confirmed') badgeColor = 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-[0_0_6px_rgba(16,185,129,0.05)]'
+                          else if (b.status === 'pending') badgeColor = 'bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_6px_rgba(245,158,11,0.05)]'
+                          else if (b.status === 'completed') badgeColor = 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 shadow-[0_0_6px_rgba(99,102,241,0.05)]'
+                          else if (b.status === 'cancelled') badgeColor = 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
 
                           return (
                             <div
                               key={b.id}
-                              className={`w-full px-1.5 py-0.8 rounded-lg text-[9px] font-bold truncate flex items-center gap-1 ${
-                                isSelected ? 'bg-white/10 text-white border-transparent' : badgeColor
+                              className={`w-full px-2 py-1 rounded-lg text-[10.5px] sm:text-xs font-bold truncate flex items-center gap-1.5 min-h-[22px] sm:min-h-[24px] ${
+                                isSelected ? 'bg-white/20 text-white border-transparent' : badgeColor
                               }`}
                               title={`Client: ${b.customer_name}\nProgram: ${b.program_name_snapshot || 'General Event'}\nStatus: ${b.status}`}
                             >
@@ -391,7 +395,7 @@ export default function CalendarPage() {
                       </div>
 
                       {/* Mobile view tags */}
-                      <div className="flex sm:hidden gap-0.5 justify-start items-center w-full">
+                      <div className="flex sm:hidden gap-1 justify-start items-center w-full">
                         {dayBookings.slice(0, 3).map((b) => {
                           let dotColor = 'bg-slate-500'
                           if (b.status === 'confirmed') dotColor = 'bg-emerald-500'
@@ -401,13 +405,13 @@ export default function CalendarPage() {
                           return (
                             <span
                               key={b.id}
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`}
+                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`}
                               title={`${b.customer_name} (${b.status})`}
                             />
                           )
                         })}
                         {dayBookings.length > 3 && (
-                          <span className="text-[7px] text-slate-555 font-black leading-none shrink-0">+</span>
+                          <span className="text-[9px] text-slate-400 font-black leading-none shrink-0">+</span>
                         )}
                       </div>
                     </div>
@@ -474,7 +478,7 @@ export default function CalendarPage() {
                     const isPaid = Number(b.remaining_amount) === 0
 
                     return (
-                      <div key={b.id} className="bg-slate-955/40 border border-slate-850 rounded-2xl overflow-hidden shadow-lg p-5 space-y-6 relative">
+                      <div key={b.id} className="bg-slate-950/40 border border-slate-800 rounded-2xl overflow-hidden shadow-lg p-5 space-y-6 relative">
                         {/* Top Hero Section */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-900">
                           <div>
@@ -483,8 +487,8 @@ export default function CalendarPage() {
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto tracking-wide uppercase ${
                             b.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' :
-                            b.status === 'pending' ? 'bg-amber-500/10 text-amber-450 border border-amber-500/20' :
-                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                            b.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                            b.status === 'completed' ? 'bg-indigo-500/10 text-indigo-455 border border-indigo-500/20' :
                             'bg-rose-500/10 text-rose-455 border border-rose-500/20'
                           }`}>
                             {b.status}
@@ -496,8 +500,8 @@ export default function CalendarPage() {
                           {/* Customer Info Box */}
                           <div className="space-y-3">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Customer Details</span>
-                            <div className="flex items-center gap-3.5 bg-slate-955/35 p-3 rounded-xl border border-slate-900/60">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-650 to-indigo-650 flex items-center justify-center text-white font-extrabold text-xs shadow-md">
+                            <div className="flex items-center gap-3.5 bg-slate-950/35 p-3 rounded-xl border border-slate-900/60">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shadow-md">
                                 {initials}
                               </div>
                               <div className="min-w-0">
@@ -509,7 +513,7 @@ export default function CalendarPage() {
                             <div className="flex gap-2.5">
                               <a
                                 href={phoneLink}
-                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 hover:text-white transition-colors text-xs font-semibold active:scale-95"
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors text-xs font-semibold active:scale-95"
                               >
                                 <Phone size={12} className="text-indigo-400" /> Call Client
                               </a>
@@ -517,7 +521,7 @@ export default function CalendarPage() {
                                 href={whatsappLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-350 hover:text-white transition-colors text-xs font-semibold active:scale-95"
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors text-xs font-semibold active:scale-95"
                               >
                                 <Share2 size={12} className="text-emerald-400" /> WhatsApp
                               </a>
@@ -526,10 +530,10 @@ export default function CalendarPage() {
 
                           {/* Event details */}
                           <div className="space-y-3">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Event Schedule</span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Event Schedule</span>
                             <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-900/60 text-xs space-y-2 text-slate-300">
                               <div className="flex items-center gap-2">
-                                <Clock size={12} className="text-slate-505 animate-pulse" />
+                                <Clock size={12} className="text-slate-500 animate-pulse" />
                                 <span>
                                   {b.start_time && b.end_time
                                     ? `${format12HourTime(b.start_time)} - ${format12HourTime(b.end_time)}`
@@ -546,7 +550,7 @@ export default function CalendarPage() {
                                         href={mapsLink}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-350 inline-flex items-center mt-1"
+                                        className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-355 inline-flex items-center mt-1"
                                       >
                                         Navigate <ExternalLink size={10} className="ml-0.5" />
                                       </a>
@@ -554,7 +558,7 @@ export default function CalendarPage() {
                                   </div>
                                 </div>
                               ) : (
-                                <div className="text-slate-550">No venue address provided</div>
+                                <div className="text-slate-500">No venue address provided</div>
                               )}
                             </div>
                           </div>
@@ -564,22 +568,22 @@ export default function CalendarPage() {
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Breakdown</span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${isPaid ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-450 border border-amber-500/20'}`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' : 'bg-amber-500/10 text-amber-500 border-amber-500/25'}`}>
                               {isPaid ? 'PAID' : 'DUE'}
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                            <div className="bg-slate-950/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Total</p>
                               <p className="text-sm font-bold text-white mt-1">₹{Number(b.total_amount).toLocaleString('en-IN')}</p>
                             </div>
-                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                            <div className="bg-slate-950/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Advance</p>
                               <p className="text-sm font-bold text-white mt-1">₹{Number(b.advance_amount).toLocaleString('en-IN')}</p>
                             </div>
-                            <div className="bg-slate-955/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
+                            <div className="bg-slate-950/20 border border-slate-900/60 p-3 rounded-xl text-center shadow-sm">
                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Balance</p>
-                              <p className={`text-sm font-black mt-1 ${isPaid ? 'text-emerald-400' : 'text-amber-450'}`}>
+                              <p className={`text-sm font-black mt-1 ${isPaid ? 'text-emerald-400' : 'text-amber-500'}`}>
                                 ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
                               </p>
                             </div>
@@ -589,7 +593,7 @@ export default function CalendarPage() {
                         {/* Actions Section */}
                         <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
                           <Link href={`/bookings?edit=${b.id}`}>
-                            <span className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 hover:border-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95">
+                            <span className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95">
                               <Edit2 size={12} /> Edit Booking
                             </span>
                           </Link>

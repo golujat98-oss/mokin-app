@@ -183,7 +183,12 @@ export default function CustomDatePicker({
 
       {/* Calendar Dropdown Modal Panel */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:left-auto sm:w-[320px] top-[48px] z-50 bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150">
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="fixed bottom-4 left-4 right-4 sm:absolute sm:left-auto sm:right-0 sm:w-[320px] sm:top-[48px] sm:bottom-auto sm:translate-y-0 z-50 bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2 duration-150">
           
           {/* Navigation Month & Year Selector Header */}
           <div className="flex items-center justify-between mb-4">
@@ -270,6 +275,7 @@ export default function CustomDatePicker({
           </div>
 
         </div>
+        </>
       )}
     </div>
   )

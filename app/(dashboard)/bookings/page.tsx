@@ -24,7 +24,7 @@ import {
   Headphones
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
-import { downloadBookingPDF } from '@/components/bookings/BookingContract'
+import { downloadBookingPDF, downloadBookingsListPDF } from '@/components/bookings/BookingContract'
 import CustomDatePicker from '@/components/bookings/CustomDatePicker'
 
 
@@ -578,6 +578,23 @@ export default function BookingsPage() {
     }
   }
 
+  // PDF report list exporter
+  const handleExportPDF = async () => {
+    if (filteredBookings.length === 0) {
+      toast.error('No booking records to export')
+      return
+    }
+
+    toast.promise(
+      downloadBookingsListPDF(filteredBookings, profile),
+      {
+        loading: 'Generating Bookings PDF Report...',
+        success: 'PDF report downloaded successfully!',
+        error: 'Failed to generate PDF'
+      }
+    )
+  }
+
   // WhatsApp Share receipt formatter
   const handleShareWhatsApp = (b: Booking) => {
     const formattedDate = formatIndianDate(b.event_date)
@@ -616,6 +633,7 @@ export default function BookingsPage() {
   }
 
   // Filter computation memoized
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
       const matchesSearch =
@@ -654,20 +672,29 @@ export default function BookingsPage() {
           </h1>
           <p className="text-slate-400 text-sm mt-1">Manage events, track advances, check schedule overlaps, and download contracts.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2 w-full md:flex md:w-auto md:gap-3 shrink-0">
           <button
             onClick={handleExportExcel}
-            className="flex items-center bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-medium text-sm px-4 py-2.5 rounded-xl transition-colors cursor-pointer animate-none"
+            className="flex flex-row items-center justify-center bg-slate-900/60 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs py-3 px-1.5 sm:px-4 rounded-xl transition-all cursor-pointer h-12 w-full shadow-sm"
           >
-            <FileSpreadsheet size={16} className="mr-2 text-emerald-400" />
-            Excel
+            <FileSpreadsheet size={16} className="mr-1.5 sm:mr-2 text-emerald-400 shrink-0" />
+            <span>Excel</span>
           </button>
+          
           <button
             onClick={handleOpenNew}
-            className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-indigo-600/15 active:scale-95 cursor-pointer font-bold animate-none"
+            className="flex flex-row items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] sm:text-xs py-3 px-1.5 sm:px-4 rounded-xl transition-all shadow-md shadow-indigo-600/10 active:scale-95 cursor-pointer h-12 w-full"
           >
-            <Plus size={16} className="mr-2" />
-            Add Booking
+            <Plus size={16} className="mr-1.5 sm:mr-2 shrink-0" />
+            <span>Add Booking</span>
+          </button>
+
+          <button
+            onClick={handleExportPDF}
+            className="flex flex-row items-center justify-center bg-slate-900/60 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs py-3 px-1.5 sm:px-4 rounded-xl transition-all cursor-pointer h-12 w-full shadow-sm"
+          >
+            <FileDown size={16} className="mr-1.5 sm:mr-2 text-rose-400 shrink-0" />
+            <span>PDF</span>
           </button>
         </div>
       </div>
@@ -732,7 +759,7 @@ export default function BookingsPage() {
                       <td className="py-3.5 px-4">
                         <div>
                           <p className="font-bold text-white">{b.customer_name}</p>
-                          <p className="text-xs text-slate-450">{b.mobile_number}</p>
+                          <p className="text-xs text-slate-400">{b.mobile_number}</p>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
@@ -807,9 +834,9 @@ export default function BookingsPage() {
                           <button
                             onClick={() => handleShareWhatsApp(b)}
                             title="Share Booking via WhatsApp"
-                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-emerald-950/30 hover:border-emerald-900 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-emerald-950/30 hover:border-emerald-900 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
                           >
-                            <Share2 size={14} className="text-emerald-450" />
+                            <Share2 size={14} className="text-emerald-400" />
                           </button>
 
                           <button
@@ -822,7 +849,7 @@ export default function BookingsPage() {
                           <button
                             onClick={() => handleDelete(b.id)}
                             title="Delete booking"
-                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-850 text-slate-400 hover:text-rose-450 transition-colors cursor-pointer"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -858,7 +885,7 @@ export default function BookingsPage() {
                   <div className="flex items-center justify-between gap-4 bg-slate-950/20 p-4 rounded-xl border border-slate-800/40">
                     <div className="flex items-center gap-3.5 min-w-0">
                       {/* Avatar initials badge */}
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-655 to-indigo-400 border border-indigo-500/30 flex items-center justify-center text-white font-extrabold text-sm shrink-0 shadow-md">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 border border-indigo-500/30 flex items-center justify-center text-white font-extrabold text-sm shrink-0 shadow-md">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -872,7 +899,7 @@ export default function BookingsPage() {
                       <a
                         href={phoneLink}
                         title="Call Customer"
-                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:text-white hover:bg-slate-850 hover:border-slate-700 transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
+                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 hover:text-white hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
                       >
                         <Phone size={15} />
                       </a>
@@ -881,7 +908,7 @@ export default function BookingsPage() {
                         target="_blank"
                         rel="noreferrer"
                         title="WhatsApp Chat"
-                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:text-white hover:bg-slate-850 hover:border-slate-700 transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
+                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:text-white hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
                       >
                         <Share2 size={15} />
                       </a>
@@ -928,22 +955,22 @@ export default function BookingsPage() {
                         </a>
                       )}
                     </div>
-                    <div className="bg-slate-900/50 border border-slate-850 p-3 rounded-xl text-xs break-words leading-relaxed text-slate-300">
+                    <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-xl text-xs break-words leading-relaxed text-slate-300">
                       {b.venue_address || 'Not specified'}
                     </div>
                   </div>
 
                   {/* 4. Payment Section (Three Equal Cards) */}
                   <div className="grid grid-cols-3 gap-3 w-full">
-                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-850 flex flex-col justify-between items-center text-center min-h-[72px]">
+                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800 flex flex-col justify-between items-center text-center min-h-[72px]">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TOTAL</span>
                       <span className="text-white font-extrabold text-sm mt-1.5">₹{Number(b.total_amount).toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-850 flex flex-col justify-between items-center text-center min-h-[72px]">
+                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800 flex flex-col justify-between items-center text-center min-h-[72px]">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ADVANCE</span>
                       <span className="text-slate-300 font-semibold text-sm mt-1.5">₹{Number(b.advance_amount).toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-850 flex flex-col justify-between items-center text-center min-h-[72px]">
+                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800 flex flex-col justify-between items-center text-center min-h-[72px]">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">BALANCE</span>
                       <span className={`font-extrabold text-sm mt-1.5 ${Number(b.remaining_amount) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                         ₹{Number(b.remaining_amount).toLocaleString('en-IN')}
@@ -1004,7 +1031,7 @@ export default function BookingsPage() {
                     <button
                       onClick={() => handleDelete(b.id)}
                       title="Delete booking"
-                      className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-rose-400 hover:text-rose-350 transition-colors cursor-pointer text-[11px] font-bold h-12 w-full active:scale-95"
+                      className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-rose-400 hover:text-rose-400 transition-colors cursor-pointer text-[11px] font-bold h-12 w-full active:scale-95"
                     >
                       <Trash2 size={14} className="shrink-0" />
                       <span>Delete</span>

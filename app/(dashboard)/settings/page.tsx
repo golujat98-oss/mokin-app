@@ -286,7 +286,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Logo Upload */}
               <div className="flex flex-col items-center justify-center bg-slate-950/20 border border-slate-800 rounded-2xl p-4 text-center">
-                <span className="text-xs font-semibold text-slate-450 uppercase tracking-wider mb-3">Business Logo</span>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Business Logo</span>
                 <div className="relative w-24 h-24 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden mb-3">
                   {logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -315,7 +315,7 @@ export default function SettingsPage() {
               {/* Identity Fields */}
               <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Business / Brand Name</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Business / Brand Name</label>
                   <input
                     type="text"
                     required
@@ -327,7 +327,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Owner / Manager Name</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Owner / Manager Name</label>
                   <input
                     type="text"
                     value={ownerName}
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">GSTIN Number</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">GSTIN Number</label>
                   <input
                     type="text"
                     value={gstNumber}
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Website URL</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Website URL</label>
                   <input
                     type="text"
                     value={website}
@@ -371,7 +371,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Business Mobile</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Business Mobile</label>
                 <input
                   type="tel"
                   value={mobile}
@@ -382,7 +382,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">WhatsApp Number</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
                 <input
                   type="tel"
                   value={whatsapp}
@@ -393,7 +393,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Business Email</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Business Email</label>
                 <input
                   type="email"
                   value={email}
@@ -414,7 +414,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5 sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Office Address</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Office Address</label>
                 <textarea
                   value={businessAddress}
                   onChange={(e) => setBusinessAddress(e.target.value)}
@@ -425,7 +425,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">City</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">City</label>
                 <input
                   type="text"
                   value={city}
@@ -436,7 +436,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">State</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">State</label>
                 <input
                   type="text"
                   value={stateName}
@@ -447,7 +447,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Pincode</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Pincode</label>
                 <input
                   type="text"
                   value={pincodeVal}
@@ -468,7 +468,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Invoice Prefix</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Invoice Prefix</label>
                 <input
                   type="text"
                   value={invoicePrefix}
@@ -479,7 +479,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Next Invoice Number</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Next Invoice Number</label>
                 <input
                   type="number"
                   value={invoiceNumber}
@@ -490,7 +490,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">Invoice Footer terms</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Invoice Footer terms</label>
                 <textarea
                   value={invoiceFooter}
                   onChange={(e) => setInvoiceFooter(e.target.value)}
@@ -502,7 +502,7 @@ export default function SettingsPage() {
 
               {/* QR Upload Column */}
               <div className="flex flex-col items-center justify-center bg-slate-950/20 border border-slate-800 rounded-2xl p-4 text-center">
-                <span className="text-xs font-semibold text-slate-450 uppercase tracking-wider mb-3">UPI QR Code</span>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">UPI QR Code</span>
                 <div className="relative w-24 h-24 bg-slate-900 border border-slate-880 rounded-xl flex items-center justify-center overflow-hidden mb-3">
                   {qrUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -530,7 +530,7 @@ export default function SettingsPage() {
 
               {/* Signature Upload Column */}
               <div className="flex flex-col items-center justify-center bg-slate-950/20 border border-slate-800 rounded-2xl p-4 text-center sm:col-span-2">
-                <span className="text-xs font-semibold text-slate-450 uppercase tracking-wider mb-3">Authorized Signature Seal</span>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Authorized Signature Seal</span>
                 <div className="relative w-full max-w-xs h-24 bg-slate-900 border border-slate-880 rounded-xl flex items-center justify-center overflow-hidden mb-3">
                   {signatureUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -566,7 +566,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="max-w-xs space-y-1.5 relative">
-              <label className="block text-xs font-semibold text-slate-450 uppercase tracking-wider">4-Digit Keypad PIN</label>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">4-Digit Keypad PIN</label>
               <div className="relative">
                 <input
                   type={showPin ? 'text' : 'password'}

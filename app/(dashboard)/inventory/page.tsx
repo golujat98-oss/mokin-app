@@ -289,9 +289,9 @@ export default function InventoryPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        item.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-550/20' :
-                        item.status === 'in_use' ? 'bg-sky-500/10 text-sky-400 border border-sky-550/20' :
-                        'bg-amber-500/10 text-amber-500 border border-amber-550/20'
+                        item.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                        item.status === 'in_use' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
+                        'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       }`}>
                         {item.status === 'available' && <CheckCircle2 size={12} />}
                         {item.status === 'in_use' && <Activity size={12} />}
@@ -307,14 +307,14 @@ export default function InventoryPage() {
                         <button
                           onClick={() => handleOpenEdit(item)}
                           title="Edit log"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
                         >
                           <Edit2 size={13} />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
                           title="Remove item"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-850 text-slate-400 hover:text-rose-450 transition-colors cursor-pointer"
+                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
                         >
                           <Trash2 size={13} />
                         </button>

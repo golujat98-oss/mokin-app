@@ -487,8 +487,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* 2. Premium SaaS Metric Cards Grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {/* Total Bookings Card (Indigo Theme) */}
         <div
@@ -496,16 +494,16 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings')}
-          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-indigo-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-indigo-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-indigo-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(99,102,241,0.15)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-indigo-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-indigo-500/[0.03] blur-xl pointer-events-none group-hover:bg-indigo-500/[0.06] transition-colors" />
-          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Total Bookings</span>
-            <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight">{stats.totalBookings}</h3>
-            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Total bookings</span>
+          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Total Bookings</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{stats.totalBookings}</h3>
+            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Total bookings</span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <Calendar size={16} className="sm:hidden" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <Calendar size={18} className="sm:hidden" />
             <Calendar size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
@@ -516,16 +514,16 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?status=pending')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=pending')}
-          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-amber-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-amber-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-amber-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-amber-500/[0.03] blur-xl pointer-events-none group-hover:bg-amber-500/[0.06] transition-colors" />
-          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Pending Bookings</span>
-            <h3 className="text-xl sm:text-3xl font-black text-amber-450 tracking-tight">{allBookings.filter(b => b.status === 'pending').length}</h3>
-            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Waiting for confirmation</span>
+          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Pending Bookings</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-500 tracking-tight">{allBookings.filter(b => b.status === 'pending').length}</h3>
+            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Waiting for confirmation</span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center text-amber-450 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <Clock size={16} className="sm:hidden" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <Clock size={18} className="sm:hidden" />
             <Clock size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
@@ -536,16 +534,16 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?status=completed')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?status=completed')}
-          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-emerald-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-emerald-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-emerald-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-emerald-500/[0.03] blur-xl pointer-events-none group-hover:bg-emerald-500/[0.06] transition-colors" />
-          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Completed Bookings</span>
-            <h3 className="text-xl sm:text-3xl font-black text-emerald-400 tracking-tight">{allBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').length}</h3>
-            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Successfully completed</span>
+          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Completed Bookings</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">{allBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').length}</h3>
+            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Successfully completed</span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
-            <CheckCircle size={16} className="sm:hidden" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/20 group-hover:scale-110 transition-all duration-300 shrink-0 ml-1 relative z-10">
+            <CheckCircle size={18} className="sm:hidden" />
             <CheckCircle size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
@@ -556,16 +554,16 @@ export default function DashboardPage() {
           tabIndex={0}
           onClick={() => router.push('/bookings?filter=dues')}
           onKeyDown={(e) => e.key === 'Enter' && router.push('/bookings?filter=dues')}
-          className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.05] hover:border-rose-500/35 p-3.5 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(239,68,68,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.98] outline-none focus:ring-1 focus:ring-rose-500/50"
+          className="bg-slate-955/40 backdrop-blur-xl border border-white/[0.05] hover:border-rose-500/35 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(239,68,68,0.12)] group relative overflow-hidden w-full cursor-pointer active:scale-[0.96] active:bg-slate-900/60 outline-none focus:ring-1 focus:ring-rose-500/50"
         >
           <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-rose-500/[0.03] blur-xl pointer-events-none group-hover:bg-rose-500/[0.06] transition-colors" />
-          <div className="space-y-1 relative z-10 min-w-0 flex-1 text-left">
-            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest block truncate">Remaining Dues</span>
-            <h3 className="text-xl sm:text-3xl font-black text-rose-455 tracking-tight truncate">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
-            <span className="text-[8px] sm:text-[10px] text-slate-400 font-medium block truncate mt-0.5">Pending collection</span>
+          <div className="space-y-1.5 relative z-10 min-w-0 flex-1 text-left">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-200 uppercase tracking-wider block whitespace-normal break-words leading-tight">Remaining Dues</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-500 tracking-tight truncate">₹{stats.totalDues.toLocaleString('en-IN')}</h3>
+            <span className="text-xs sm:text-[13px] text-slate-300 font-semibold block truncate mt-0.5">Pending collection</span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-455 shrink-0 ml-1 relative z-10">
-            <IndianRupee size={16} className="sm:hidden" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 shrink-0 ml-1 relative z-10">
+            <IndianRupee size={18} className="sm:hidden" />
             <IndianRupee size={20} className="hidden sm:block stroke-[2]" />
           </div>
         </div>
@@ -579,39 +577,72 @@ export default function DashboardPage() {
           {/* Summary Items Grid */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-              <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Today's Summary</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Today's Summary</p>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl font-black text-white">{todayBookings.length}</span>
-                <span className="text-xs text-slate-400 font-semibold">Active Event{todayBookings.length !== 1 ? 's' : ''} Today</span>
+                <span className="text-3xl font-black text-white">{todayBookings.length}</span>
+                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Active Events Today</span>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold mt-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-bold mt-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Active bookings: {allBookings.filter(b => b.status === 'confirmed').length}
               </span>
             </div>
 
             <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-              <p className="text-slate-550 font-bold uppercase tracking-wider text-[10px]">Financial Status</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Financial Status</p>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl font-black text-amber-405">₹{stats.totalDues.toLocaleString('en-IN')}</span>
-                <span className="text-xs text-slate-405 font-semibold">Outstanding Balance</span>
+                <span className="text-3xl font-black text-amber-500">₹{stats.totalDues.toLocaleString('en-IN')}</span>
+                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Outstanding Balance</span>
               </div>
-              <span className="text-[10px] text-slate-450 mt-2 block font-medium">
-                Business health status: <span className="text-indigo-400 font-black">Healthy</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 mt-2 block font-medium">
+                Business health status: <span className="text-indigo-400 font-bold">Healthy</span>
               </span>
             </div>
           </div>
 
-          {/* Next Event Quick View */}
+          {/* Next Program Quick View */}
           <div className="bg-slate-950/20 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between">
-            <p className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Next Program</p>
+            <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Next Program</p>
             {nextEvent ? (
-              <div className="mt-2 space-y-1 text-xs text-left">
-                <p className="font-extrabold text-white truncate">🎂 {nextEvent.program_name_snapshot || 'General Event'}</p>
-                <p className="text-indigo-400 font-bold">📅 {formatIndianDate(nextEvent.event_date)}</p>
-                <p className="text-slate-400 font-medium">🕗 {nextEvent.start_time ? format12HourTime(nextEvent.start_time) : 'Time unspecified'}</p>
-                <p className="text-slate-455 truncate">📍 {nextEvent.venue_address || 'Unspecified location'}</p>
-                <p className="text-slate-455 font-semibold mt-1">👤 {nextEvent.customer_name}</p>
+              <div className="mt-2.5 space-y-2.5 text-xs text-left">
+                <p className="font-extrabold text-sm text-white flex items-center gap-1.5 truncate">
+                  <span>🎂</span>
+                  <span className="truncate">{nextEvent.program_name_snapshot || 'General Event'}</span>
+                </p>
+                <p className="text-indigo-400 font-bold text-xs flex items-center gap-1.5">
+                  <span>📅</span>
+                  <span>{formatIndianDate(nextEvent.event_date)}</span>
+                </p>
+                <p className="text-slate-300 font-medium text-xs flex items-center gap-1.5 truncate">
+                  <span>📍</span>
+                  <span className="truncate">{nextEvent.venue_address || 'Unspecified location'}</span>
+                </p>
+                <p className="text-slate-400 font-medium text-xs flex items-center gap-1.5">
+                  <span>🕗</span>
+                  <span>{nextEvent.start_time ? format12HourTime(nextEvent.start_time) : 'Time unspecified'}</span>
+                </p>
+                <p className="text-slate-400 font-semibold text-xs flex items-center gap-1.5 truncate">
+                  <span>👤</span>
+                  <span className="truncate">{nextEvent.customer_name}</span>
+                </p>
+                {(() => {
+                  const remaining = Number(nextEvent.remaining_amount) || 0
+                  const isPaid = remaining === 0
+                  const isPartiallyPaid = !isPaid && (Number(nextEvent.advance_amount) || 0) > 0
+                  
+                  return (
+                    <div className="pt-2 border-t border-white/[0.03] flex items-center justify-between mt-1">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Dues Status</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                        isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' :
+                        isPartiallyPaid ? 'bg-amber-500/10 text-amber-500 border-amber-500/15 animate-pulse' :
+                        'bg-rose-500/10 text-rose-500 border-rose-500/15'
+                      }`}>
+                        {isPaid ? 'Paid' : isPartiallyPaid ? 'Partial' : 'Unpaid'}
+                      </span>
+                    </div>
+                  )
+                })()}
               </div>
             ) : (
               <p className="text-xs text-slate-500 mt-2 text-left italic">No upcoming programs scheduled.</p>
@@ -664,7 +695,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-slate-550 uppercase tracking-widest mb-1">
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
                     <div key={`${d}-${idx}`} className="py-0.5">{d}</div>
                   ))}
@@ -738,7 +769,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   {/* Today's Programs section */}
                   <div>
-                    <h4 className="text-[10px] font-black text-slate-405 uppercase tracking-widest mb-2">Today's Programs</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Today's Programs</h4>
                     <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
                       {todayBookings.length === 0 ? (
                         <p className="text-xs text-slate-500 italic py-1.5">No programs scheduled for today.</p>
@@ -767,7 +798,7 @@ export default function DashboardPage() {
 
                   {/* Upcoming Programs section */}
                   <div>
-                    <h4 className="text-[10px] font-black text-slate-405 uppercase tracking-widest mb-2">Upcoming Programs</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Upcoming Programs</h4>
                     <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                       {upcomingBookings.filter(b => b.event_date > todayStr).length === 0 ? (
                         <p className="text-xs text-slate-500 italic py-1.5">No upcoming programs scheduled.</p>
@@ -776,8 +807,8 @@ export default function DashboardPage() {
                           <div key={b.id} className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-colors">
                             <div className="min-w-0 pr-2">
                               <p className="text-xs font-black text-white truncate">{b.program_name_snapshot || 'General Event'}</p>
-                              <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-455">
-                                <span className="font-extrabold text-slate-400">{formatIndianDate(b.event_date)}</span>
+                              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400">
+                                <span className="font-bold text-slate-300">{formatIndianDate(b.event_date)}</span>
                                 <span>•</span>
                                 <span className="truncate">👤 {b.customer_name}</span>
                               </div>
@@ -1075,7 +1106,7 @@ export default function DashboardPage() {
 
                       {/* Event details */}
                       <div className="space-y-3">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Event Schedule</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Event Schedule</span>
                         <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-900/60 text-xs space-y-2 text-slate-300">
                           <div className="flex items-center gap-2">
                             <Clock size={12} className="text-slate-500 animate-pulse" />
@@ -1182,14 +1213,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {/* Floating Action Button (FAB) for Mobile Quick Bookings */}
-      <div className="md:hidden fixed bottom-24 right-4 z-40">
-        <Link href="/bookings?new=true">
-          <button className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-650 text-white flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer">
-            <Plus size={22} className="stroke-[3.5]" />
-          </button>
-        </Link>
-      </div>
+
     </div>
   )
 }

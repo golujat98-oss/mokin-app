@@ -35,7 +35,7 @@ const expenseCategories = [
   { val: 'Diesel & Transport', label: 'Diesel & Transport', icon: Truck, color: 'text-sky-400', bg: 'bg-sky-500/10' },
   { val: 'Catering & Food', label: 'Catering & Food', icon: Receipt, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   { val: 'Maintenance & Repairs', label: 'Maintenance & Repairs', icon: Wrench, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  { val: 'Other', label: 'Other Overheads', icon: CircleDollarSign, color: 'text-rose-450', bg: 'bg-rose-500/10' },
+  { val: 'Other', label: 'Other Overheads', icon: CircleDollarSign, color: 'text-rose-400', bg: 'bg-rose-500/10' },
 ]
 
 export default function ExpensesPage() {
@@ -271,7 +271,7 @@ export default function ExpensesPage() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Ledger (Current Month)</p>
             <h4 className="text-xl font-bold text-white mt-1">₹{totalMonthlyOutflow.toLocaleString('en-IN')}</h4>
           </div>
-          <TrendingDown size={18} className="text-rose-450 opacity-60" />
+          <TrendingDown size={18} className="text-rose-400 opacity-60" />
         </div>
 
         {/* Wages Outflow */}
@@ -322,7 +322,7 @@ export default function ExpensesPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="block px-3 py-2 border border-slate-800 rounded-xl bg-slate-950/40 text-slate-350 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm cursor-pointer"
+            className="block px-3 py-2 border border-slate-800 rounded-xl bg-slate-955/40 text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm cursor-pointer"
           >
             <option value="all">All Categories</option>
             {expenseCategories.map((c) => (
@@ -335,7 +335,7 @@ export default function ExpensesPage() {
       {/* LEDGER INDEX TABLE */}
       {filteredExpenses.length === 0 ? (
         <div className="text-center py-16 bg-slate-900/20 border border-slate-900 rounded-2xl">
-          <CircleDollarSign className="h-10 w-10 text-slate-705 mx-auto mb-2" />
+          <CircleDollarSign className="h-10 w-10 text-slate-500 mx-auto mb-2" />
           <p className="text-slate-400 text-sm">No expense records found.</p>
         </div>
       ) : (
@@ -378,14 +378,14 @@ export default function ExpensesPage() {
                         <button
                           onClick={() => handleOpenEdit(exp)}
                           title="Edit log"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
                         >
                           <Edit2 size={13} />
                         </button>
                         <button
                           onClick={() => handleDelete(exp.id)}
                           title="Delete log"
-                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-850 text-slate-400 hover:text-rose-450 transition-colors cursor-pointer"
+                          className="p-2 rounded-lg bg-slate-950/40 hover:bg-rose-950/20 hover:border-rose-900/40 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
                         >
                           <Trash2 size={13} />
                         </button>
