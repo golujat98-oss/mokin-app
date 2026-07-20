@@ -58,60 +58,90 @@ export default function BannerAd({ placement }: BannerAdProps) {
     if (!adRef.current || adRef.current.children.length > 0) return
 
     let isDisposed = false
+    let cleanupFn: (() => void) | undefined
 
-    const loadAd = async () => {
+    const loadAd = () => {
       try {
         if (config.provider === 'adsterra') {
-          const atOptions = {
-            key: config.zoneId,
-            format: 'iframe',
-            height: config.height,
-            width: config.width,
-            params: {}
-          }
-
-          ;(window as any).atOptions = atOptions
-
-          const configScript = document.createElement('script')
-          configScript.id = `adsterra-conf-${config.zoneId}`
-          configScript.innerHTML = `atOptions = ${JSON.stringify(atOptions)}`
-
-          const invokeScript = document.createElement('script')
-          invokeScript.id = `adsterra-invoke-${config.zoneId}`
-          invokeScript.type = 'text/javascript'
-          invokeScript.src = `//www.highperformanceformat.com/${config.zoneId}/invoke.js`
-          invokeScript.async = true
-
-          invokeScript.onload = () => {
+          // Create isolated iframe to avoid global scope contamination / race conditions
+          const iframe = document.createElement('iframe')
+          iframe.style.width = '100%'
+          iframe.style.height = '100%'
+          iframe.style.border = 'none'
+          iframe.style.overflow = 'hidden'
+          iframe.scrolling = 'no'
+          iframe.setAttribute('frameborder', '0')
+          
+          iframe.onload = () => {
             if (!isDisposed) {
               setIsLoaded(true)
             }
           }
-          invokeScript.onerror = () => {
-            if (!isDisposed) {
-              setIsFailed(true)
-            }
-          }
 
           if (adRef.current) {
-            adRef.current.appendChild(configScript)
-            adRef.current.appendChild(invokeScript)
+            adRef.current.appendChild(iframe)
           }
 
-          // Fallback safety timeout if onload/onerror events don't trigger (e.g. adblocker)
-          setTimeout(() => {
-            if (!isDisposed && !isLoaded && !isFailed) {
-              // Check if any iframe got written or if it remained empty
-              if (adRef.current && adRef.current.innerHTML.trim() === '') {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+          if (iframeDoc) {
+            iframeDoc.open()
+            iframeDoc.write(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <style>
+                    body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: transparent; overflow: hidden; }
+                  </style>
+                  <script type="text/javascript">
+                    var atOptions = {
+                      key: '${config.zoneId}',
+                      format: 'iframe',
+                      height: ${config.height},
+                      width: ${config.width},
+                      params: {}
+                    };
+                  </script>
+                  <script type="text/javascript" src="//www.highperformanceformat.com/${config.zoneId}/invoke.js" onerror="window.parent.postMessage('ad-failed-${config.zoneId}', '*')"></script>
+                </head>
+                <body>
+                </body>
+              </html>
+            `)
+            iframeDoc.close()
+          }
+
+          // Listen for failed event from iframe onerror
+          const handleMessage = (event: MessageEvent) => {
+            if (event.data === `ad-failed-${config.zoneId}`) {
+              if (!isDisposed) {
                 setIsFailed(true)
-              } else {
+              }
+            }
+          }
+          window.addEventListener('message', handleMessage)
+
+          // Fallback safety timeout if onload/onerror events don't trigger (e.g. adblocker)
+          const fallbackTimeout = setTimeout(() => {
+            if (!isDisposed && !isLoaded && !isFailed) {
+              try {
+                const doc = iframe.contentDocument || iframe.contentWindow?.document
+                if (doc && doc.body && doc.body.innerHTML.trim() === '') {
+                  setIsFailed(true)
+                } else {
+                  setIsLoaded(true)
+                }
+              } catch (e) {
                 setIsLoaded(true)
               }
             }
           }, 4000)
 
+          cleanupFn = () => {
+            window.removeEventListener('message', handleMessage)
+            clearTimeout(fallbackTimeout)
+          }
+
         } else if (config.provider === 'adsense') {
-          // Future Google AdSense layout logic integration point
           setIsLoaded(true)
         }
       } catch (err) {
@@ -126,6 +156,9 @@ export default function BannerAd({ placement }: BannerAdProps) {
 
     return () => {
       isDisposed = true
+      if (cleanupFn) {
+        cleanupFn()
+      }
       if (adRef.current) {
         adRef.current.innerHTML = ''
       }
