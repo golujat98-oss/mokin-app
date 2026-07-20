@@ -578,8 +578,8 @@ export default function DashboardPage() {
       <div
         role="button"
         tabIndex={0}
-        onClick={() => nextEvent && router.push(`/bookings?edit=${nextEvent.id}`)}
-        onKeyDown={(e) => nextEvent && e.key === 'Enter' && router.push(`/bookings?edit=${nextEvent.id}`)}
+        onClick={() => nextEvent && router.push(`/bookings?view=${nextEvent.id}`)}
+        onKeyDown={(e) => nextEvent && e.key === 'Enter' && router.push(`/bookings?view=${nextEvent.id}`)}
         className="bg-slate-955/25 backdrop-blur-xl border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between cursor-pointer hover:bg-slate-900/40 active:bg-slate-950/60 active:scale-[0.995] transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 select-none group w-full text-left"
       >
         <p className="text-slate-450 font-bold uppercase tracking-wider text-[10px] mb-2">Next Program</p>
@@ -1174,9 +1174,9 @@ export default function DashboardPage() {
                           <Eye size={12} className="text-slate-400" /> View List
                         </span>
                       </Link>
-                      <Link href={`/bookings?edit=${b.id}`}>
+                      <Link href={`/bookings?view=${b.id}`}>
                         <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-350 hover:text-white transition-colors text-xs font-semibold cursor-pointer">
-                          <Edit2 size={12} className="text-purple-400" /> Edit Booking
+                          <Eye size={12} className="text-indigo-400" /> View Details
                         </span>
                       </Link>
                       <button

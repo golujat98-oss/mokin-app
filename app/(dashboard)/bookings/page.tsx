@@ -368,10 +368,18 @@ export default function BookingsPage() {
     setModalOpen(true)
   }
 
+  const handleCloseViewModal = () => {
+    setViewBooking(null)
+    if (searchParams.get('view')) {
+      router.replace('/bookings')
+    }
+  }
+
   // Handle URL navigation triggers
   useEffect(() => {
     const isNew = searchParams.get('new') === 'true'
     const editId = searchParams.get('edit')
+    const viewId = searchParams.get('view')
     const statusParam = searchParams.get('status')
     const filterParam = searchParams.get('filter')
 
@@ -380,13 +388,16 @@ export default function BookingsPage() {
     } else if (editId) {
       const b = bookings.find(x => x.id === editId)
       if (b) handleOpenEdit(b)
+    } else if (viewId) {
+      const b = bookings.find(x => x.id === viewId)
+      if (b) setViewBooking(b)
     }
 
     if (statusParam) {
       setStatusFilter(statusParam.toLowerCase())
     } else if (filterParam === 'dues') {
       setStatusFilter('dues')
-    } else if (!isNew && !editId) {
+    } else if (!isNew && !editId && !viewId) {
       setStatusFilter('all')
     }
   }, [searchParams, bookings])
@@ -1069,7 +1080,7 @@ export default function BookingsPage() {
             <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
               <h3 className="font-bold text-lg text-white">Event Booking Details</h3>
               <button
-                onClick={() => setViewBooking(null)}
+                onClick={handleCloseViewModal}
                 className="p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
@@ -1154,9 +1165,21 @@ export default function BookingsPage() {
               )}
             </div>
 
-            <div className="h-16 border-t border-slate-800 px-6 flex items-center justify-end bg-slate-950/20">
+            <div className="h-16 border-t border-slate-800 px-6 flex items-center justify-between bg-slate-950/20">
               <button
-                onClick={() => setViewBooking(null)}
+                type="button"
+                onClick={() => {
+                  const target = viewBooking
+                  handleCloseViewModal()
+                  handleOpenEdit(target)
+                }}
+                className="px-4 py-2 bg-indigo-655 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all text-sm cursor-pointer active:scale-95 shadow-md shadow-indigo-600/10"
+              >
+                Edit Booking
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseViewModal}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors text-sm cursor-pointer"
               >
                 Close Details

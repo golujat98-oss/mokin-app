@@ -300,7 +300,7 @@ export default function DashboardLayout({
         </AnimatePresence>
 
         {/* MAIN ROUTE CONTENT SCROLLABLE VIEW */}
-        <main className="flex-1 overflow-y-auto p-4 pb-36 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 pb-48 md:p-8">
           {children}
         </main>
       </div>

@@ -16,10 +16,12 @@ import {
   ChevronRightSquare,
   Edit2,
   Phone,
-  Share2
+  Share2,
+  Eye
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Booking {
@@ -73,6 +75,7 @@ const getServiceIcon = (category: string | null | undefined) => {
 
 export default function CalendarPage() {
   const supabase = createClient()
+  const router = useRouter()
 
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date()
@@ -378,7 +381,12 @@ export default function CalendarPage() {
                           return (
                             <div
                               key={b.id}
-                              className={`w-full px-2 py-1 rounded-lg text-[10.5px] sm:text-xs font-bold truncate flex items-center gap-1.5 min-h-[22px] sm:min-h-[24px] ${
+                              role="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/bookings?view=${b.id}`)
+                              }}
+                              className={`w-full px-2 py-1 rounded-lg text-[10.5px] sm:text-xs font-bold truncate flex items-center gap-1.5 min-h-[22px] sm:min-h-[24px] active:scale-95 transition-all cursor-pointer ${
                                 isSelected ? 'bg-white/20 text-white border-transparent' : badgeColor
                               }`}
                               title={`Client: ${b.customer_name}\nProgram: ${b.program_name_snapshot || 'General Event'}\nStatus: ${b.status}`}
@@ -395,25 +403,69 @@ export default function CalendarPage() {
                         )}
                       </div>
 
-                      {/* Mobile view tags */}
-                      <div className="flex sm:hidden gap-1 justify-start items-center w-full">
-                        {dayBookings.slice(0, 3).map((b) => {
-                          let dotColor = 'bg-slate-500'
+                      {/* Mobile view tags/chips */}
+                      <div className="flex sm:hidden flex-col gap-0.5 w-full overflow-hidden mt-0.5">
+                        {dayBookings.slice(0, 2).map((b) => {
+                          const emoji = getServiceIcon(b.program_name_snapshot)
+                          const name = b.program_name_snapshot || b.customer_name || 'Event'
+                          let badgeColor = 'bg-slate-500/15 text-slate-200 border border-slate-500/30'
                           const statusLower = (b.status || '').toLowerCase()
-                          if (statusLower === 'confirmed') dotColor = 'bg-emerald-500'
-                          else if (statusLower === 'pending') dotColor = 'bg-amber-500'
-                          else if (statusLower === 'completed') dotColor = 'bg-indigo-500'
-                          else if (statusLower === 'cancelled') dotColor = 'bg-rose-500'
+                          if (statusLower === 'confirmed') badgeColor = 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                          else if (statusLower === 'pending') badgeColor = 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          else if (statusLower === 'completed') badgeColor = 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
+                          else if (statusLower === 'cancelled') badgeColor = 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+
                           return (
-                            <span
+                            <div
                               key={b.id}
-                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`}
-                              title={`${b.customer_name} (${b.status})`}
-                            />
+                              role="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/bookings?view=${b.id}`)
+                              }}
+                              className={`w-full px-1 py-0.5 rounded text-[8px] font-extrabold truncate flex items-center gap-1 min-h-[16px] active:scale-95 transition-all cursor-pointer ${
+                                isSelected ? 'bg-white/20 text-white border-transparent' : badgeColor
+                              }`}
+                              title={`Client: ${b.customer_name}\nProgram: ${b.program_name_snapshot || 'General Event'}\nStatus: ${b.status}`}
+                            >
+                              <span className="shrink-0">{emoji}</span>
+                              <span className="truncate">{name}</span>
+                            </div>
                           )
                         })}
-                        {dayBookings.length > 3 && (
-                          <span className="text-[9px] text-slate-400 font-black leading-none shrink-0">+</span>
+                        {dayBookings.length > 2 ? (
+                          <div className="flex items-center justify-between w-full px-0.5 mt-0.5 shrink-0">
+                            <span className={`text-[7px] font-black uppercase ${isSelected ? 'text-white/60' : 'text-indigo-400'}`}>
+                              +{dayBookings.length - 2} more
+                            </span>
+                            <div className="flex gap-0.5 shrink-0">
+                              {dayBookings.slice(2, 5).map((b) => {
+                                let dotColor = 'bg-slate-500'
+                                const statusLower = (b.status || '').toLowerCase()
+                                if (statusLower === 'confirmed') dotColor = 'bg-emerald-500'
+                                else if (statusLower === 'pending') dotColor = 'bg-amber-500'
+                                else if (statusLower === 'completed') dotColor = 'bg-indigo-500'
+                                else if (statusLower === 'cancelled') dotColor = 'bg-rose-500'
+                                return (
+                                  <span key={b.id} className={`w-1 h-1 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`} />
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex gap-0.5 px-0.5 mt-0.5 shrink-0">
+                            {dayBookings.map((b) => {
+                              let dotColor = 'bg-slate-500'
+                              const statusLower = (b.status || '').toLowerCase()
+                              if (statusLower === 'confirmed') dotColor = 'bg-emerald-500'
+                              else if (statusLower === 'pending') dotColor = 'bg-amber-500'
+                              else if (statusLower === 'completed') dotColor = 'bg-indigo-500'
+                              else if (statusLower === 'cancelled') dotColor = 'bg-rose-500'
+                              return (
+                                <span key={b.id} className={`w-1 h-1 rounded-full shrink-0 ${isSelected ? 'bg-white' : dotColor}`} />
+                              )
+                            })}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -594,9 +646,9 @@ export default function CalendarPage() {
 
                         {/* Actions Section */}
                         <div className="flex justify-end gap-3 pt-3 border-t border-slate-900">
-                          <Link href={`/bookings?edit=${b.id}`}>
+                          <Link href={`/bookings?view=${b.id}`}>
                             <span className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95">
-                              <Edit2 size={12} /> Edit Booking
+                              <Eye size={12} className="text-indigo-400" /> View Details
                             </span>
                           </Link>
                         </div>

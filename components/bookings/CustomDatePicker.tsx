@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface BookingDayInfo {
@@ -22,7 +23,13 @@ export default function CustomDatePicker({
   placeholder = 'Select event date'
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const portalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Parse initial selected date
   const selectedDateObj = useMemo(() => {
@@ -51,7 +58,12 @@ export default function CustomDatePicker({
   // Close calendar popover on outside click
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const targetNode = event.target as Node
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(targetNode) &&
+        (!portalRef.current || !portalRef.current.contains(targetNode))
+      ) {
         setIsOpen(false)
       }
     }
@@ -167,6 +179,96 @@ export default function CustomDatePicker({
 
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+  const renderDatePickerContent = () => {
+    return (
+      <>
+        {/* Navigation Month & Year Selector Header */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-black text-white uppercase tracking-wider">
+            {months[navDate.getMonth()]} {navDate.getFullYear()}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-1.5 rounded-lg border border-slate-900 bg-slate-900/60 hover:bg-slate-800 hover:text-white text-slate-400 transition-all cursor-pointer"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="p-1.5 rounded-lg border border-slate-900 bg-slate-900/60 hover:bg-slate-800 hover:text-white text-slate-400 transition-all cursor-pointer"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Days of Week Header Grid */}
+        <div className="grid grid-cols-7 gap-1 mb-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="py-1">{day}</div>
+          ))}
+        </div>
+
+        {/* Grid Cells days of Month */}
+        <div className="grid grid-cols-7 gap-1">
+          {gridCells.map((cell, idx) => {
+            const isSelected = value === cell.dateStr
+            const isToday = cell.dateStr === todayStr
+            const dayBookings = bookingsMap[cell.dateStr] || []
+            const hasBookings = dayBookings.length > 0
+
+            let cellStyle = `h-9 w-full rounded-xl text-xs font-bold relative flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-150 `
+            
+            if (!cell.isCurrentMonth) {
+              cellStyle += `text-slate-800 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
+            } else if (isSelected) {
+              cellStyle += `bg-indigo-600 text-white shadow-md shadow-indigo-600/10 scale-105`
+            } else {
+              cellStyle += `bg-slate-900/40 border border-slate-900/40 text-slate-350 hover:bg-slate-900 hover:border-slate-800 active:scale-90 `
+              if (isToday) {
+                cellStyle += `ring-1.5 ring-indigo-500/80 bg-indigo-500/5 text-indigo-400 border-transparent `
+              }
+            }
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                disabled={!cell.isCurrentMonth}
+                onClick={() => selectDay(cell.dateStr)}
+                className={cellStyle}
+              >
+                <span>{cell.day}</span>
+                
+                {/* Colored status dots on calendar dates */}
+                {cell.isCurrentMonth && hasBookings && (
+                  <div className="absolute bottom-1.5 flex gap-0.5 justify-center items-center">
+                    {dayBookings.slice(0, 3).map((b, bIdx) => {
+                      let dotColor = 'bg-slate-500'
+                      if (b.status === 'confirmed') dotColor = 'bg-emerald-500'
+                      else if (b.status === 'pending') dotColor = 'bg-amber-500'
+                      else if (b.status === 'completed') dotColor = 'bg-indigo-500'
+                      else if (b.status === 'cancelled') dotColor = 'bg-rose-500'
+                      return (
+                        <span
+                          key={bIdx}
+                          className={`w-1 h-1 rounded-full shrink-0 ${dotColor}`}
+                        />
+                      )
+                    })}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="relative w-full" ref={containerRef}>
       {/* Trigger Button */}
@@ -181,101 +283,28 @@ export default function CustomDatePicker({
         <CalendarIcon size={16} className="text-slate-450 hover:text-indigo-400 transition-colors" />
       </button>
 
-      {/* Calendar Dropdown Modal Panel */}
+      {/* Desktop Calendar Inline Dropdown */}
       {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm sm:hidden"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="fixed bottom-4 left-4 right-4 sm:absolute sm:left-auto sm:right-0 sm:w-[320px] sm:top-[48px] sm:bottom-auto sm:translate-y-0 z-50 bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2 duration-150">
-          
-          {/* Navigation Month & Year Selector Header */}
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-black text-white uppercase tracking-wider">
-              {months[navDate.getMonth()]} {navDate.getFullYear()}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg border border-slate-900 bg-slate-900/60 hover:bg-slate-800 hover:text-white text-slate-400 transition-all cursor-pointer"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                className="p-1.5 rounded-lg border border-slate-900 bg-slate-900/60 hover:bg-slate-800 hover:text-white text-slate-400 transition-all cursor-pointer"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Days of Week Header Grid */}
-          <div className="grid grid-cols-7 gap-1 mb-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            {daysOfWeek.map((day) => (
-              <div key={day} className="py-1">{day}</div>
-            ))}
-          </div>
-
-          {/* Grid Cells days of Month */}
-          <div className="grid grid-cols-7 gap-1">
-            {gridCells.map((cell, idx) => {
-              const isSelected = value === cell.dateStr
-              const isToday = cell.dateStr === todayStr
-              const dayBookings = bookingsMap[cell.dateStr] || []
-              const hasBookings = dayBookings.length > 0
-
-              let cellStyle = `h-9 w-full rounded-xl text-xs font-bold relative flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-150 `
-              
-              if (!cell.isCurrentMonth) {
-                cellStyle += `text-slate-800 opacity-20 cursor-default hover:bg-transparent pointer-events-none`
-              } else if (isSelected) {
-                cellStyle += `bg-indigo-600 text-white shadow-md shadow-indigo-600/10 scale-105`
-              } else {
-                cellStyle += `bg-slate-900/40 border border-slate-900/40 text-slate-300 hover:bg-slate-900 hover:border-slate-800 active:scale-90 `
-                if (isToday) {
-                  cellStyle += `ring-1.5 ring-indigo-500/80 bg-indigo-500/5 text-indigo-400 border-transparent `
-                }
-              }
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={!cell.isCurrentMonth}
-                  onClick={() => selectDay(cell.dateStr)}
-                  className={cellStyle}
-                >
-                  <span>{cell.day}</span>
-                  
-                  {/* Colored status dots on calendar dates */}
-                  {cell.isCurrentMonth && hasBookings && (
-                    <div className="absolute bottom-1.5 flex gap-0.5 justify-center items-center">
-                      {dayBookings.slice(0, 3).map((b, bIdx) => {
-                        let dotColor = 'bg-slate-500'
-                        if (b.status === 'confirmed') dotColor = 'bg-emerald-500'
-                        else if (b.status === 'pending') dotColor = 'bg-amber-500'
-                        else if (b.status === 'completed') dotColor = 'bg-indigo-500'
-                        else if (b.status === 'cancelled') dotColor = 'bg-rose-500'
-                        return (
-                          <span
-                            key={bIdx}
-                            className={`w-1 h-1 rounded-full shrink-0 ${dotColor}`}
-                          />
-                        )
-                      })}
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-
+        <div className="hidden sm:block absolute right-0 w-[320px] top-[48px] z-50 bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150">
+          {renderDatePickerContent()}
         </div>
-        </>
+      )}
+
+      {/* Mobile Calendar Portal Overlay */}
+      {isOpen && mounted && createPortal(
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md sm:hidden animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+        >
+          <div 
+            ref={portalRef}
+            className="w-full max-w-xs bg-slate-950 border border-slate-800 rounded-2xl p-4.5 shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {renderDatePickerContent()}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   )
