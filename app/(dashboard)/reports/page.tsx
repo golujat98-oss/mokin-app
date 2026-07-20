@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import dynamic from 'next/dynamic'
+import BannerAd from '@/components/ads/BannerAd'
 
 const AreaChartComponent = dynamic(() => import('@/components/reports/AreaChartComponent'), {
   ssr: false,
@@ -443,6 +444,8 @@ export default function ReportsPage() {
           </div>
         </>
       )}
+
+      <BannerAd placement="middle" />
 
       {/* FILTERED BOOKINGS LIST DETAILS */}
       <div className="bg-slate-900/20 backdrop-blur-md border border-slate-900 rounded-2xl overflow-hidden shadow-xl">

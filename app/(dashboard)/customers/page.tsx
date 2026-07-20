@@ -17,6 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
+import BannerAd from '@/components/ads/BannerAd'
 
 const formatWhatsAppDate = (dateStr: string) => {
   if (!dateStr) return ''
@@ -303,6 +304,8 @@ export default function CustomersPage() {
           className="block w-full pl-10 pr-3 py-2 border border-slate-800 rounded-xl bg-slate-950/40 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all"
         />
       </div>
+
+      <BannerAd placement="middle" />
 
       {/* CUSTOMERS CARDS GRID */}
       {filteredCustomers.length === 0 ? (

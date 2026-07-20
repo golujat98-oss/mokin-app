@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import CustomDatePicker from '@/components/bookings/CustomDatePicker'
+import BannerAd from '@/components/ads/BannerAd'
 
 interface Expense {
   id: string
@@ -301,6 +302,8 @@ export default function ExpensesPage() {
           <Wrench size={18} className="text-amber-500 opacity-60" />
         </div>
       </div>
+
+      <BannerAd placement="middle" />
 
       {/* SEARCH AND FILTERS */}
       <div className="bg-slate-900/30 backdrop-blur-md border border-slate-900 p-4 rounded-2xl flex flex-col md:flex-row gap-4 mb-6 shadow-xl">

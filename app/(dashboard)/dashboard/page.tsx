@@ -27,7 +27,7 @@ import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
-import DashboardAdBanner from '@/components/ads/DashboardAdBanner'
+import BannerAd from '@/components/ads/BannerAd'
 
 interface DashboardStats {
   totalBookings: number
@@ -575,7 +575,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <DashboardAdBanner />
+      <BannerAd placement="middle" />
 
       {/* 3. Next Program Card */}
       <div
