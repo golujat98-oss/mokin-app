@@ -11,7 +11,8 @@ export default function BannerAd({ placement }: BannerAdProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const adRef = useRef<HTMLDivElement>(null)
   
-  const config = AD_CONFIG[placement]
+  const configKey = placement === 'top' ? 'dashboard_top' : placement
+  const config = AD_CONFIG[configKey as keyof typeof AD_CONFIG]
   
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)

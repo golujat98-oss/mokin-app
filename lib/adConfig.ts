@@ -6,28 +6,32 @@ export interface AdPlacementConfig {
   height: number;
   provider: AdProvider;
   visible: boolean;
+  format: 'iframe';
 }
 
-export const AD_CONFIG: Record<'top' | 'middle' | 'bottom', AdPlacementConfig> = {
-  top: {
-    zoneId: '426d84b6522644d6827b82837d66fa25_top',
+export const AD_CONFIG = {
+  dashboard_top: {
+    zoneId: '6944520e8c7c4d0e08952386d172e80f',
     width: 320,
     height: 50,
     provider: 'adsterra',
     visible: true,
-  },
+    format: 'iframe',
+  } as AdPlacementConfig,
   middle: {
     zoneId: '426d84b6522644d6827b82837d66fa25_middle',
     width: 300,
     height: 250,
     provider: 'adsterra',
     visible: true,
-  },
+    format: 'iframe',
+  } as AdPlacementConfig,
   bottom: {
     zoneId: '426d84b6522644d6827b82837d66fa25_bottom',
     width: 320,
     height: 50,
     provider: 'adsterra',
     visible: true,
-  },
+    format: 'iframe',
+  } as AdPlacementConfig,
 };
