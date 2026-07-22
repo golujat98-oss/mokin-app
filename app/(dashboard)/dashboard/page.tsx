@@ -27,6 +27,7 @@ import { toast, Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { downloadBookingPDF } from '@/components/bookings/BookingContract'
+import InvoiceModal from '@/components/bookings/InvoiceModal'
 
 interface DashboardStats {
   totalBookings: number
@@ -188,6 +189,9 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>({ business_name: 'My Business' })
   const [loading, setLoading] = useState(true)
 
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState<Booking | null>(null)
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
+
   // Calendar states
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date()
@@ -252,7 +256,7 @@ export default function DashboardPage() {
       const [bookingsRes, expensesRes, profileRes] = await Promise.all([
         supabase
           .from('bookings')
-          .select('id, customer_name, mobile_number, event_date, status, total_amount, advance_amount, remaining_amount, program_name_snapshot, start_time, end_time, venue_address')
+          .select('id, customer_name, mobile_number, event_date, status, total_amount, advance_amount, remaining_amount, program_name_snapshot, start_time, end_time, venue_address, items')
           .order('event_date', { ascending: true }),
         supabase
           .from('expenses')
@@ -1181,15 +1185,15 @@ export default function DashboardPage() {
                         </span>
                       </Link>
                       <button
-                        onClick={() => {
-                          toast.promise(
-                            downloadBookingPDF(b as any, profile),
-                            {
-                              loading: 'Generating Invoice PDF...',
-                              success: 'PDF Invoice downloaded successfully!',
-                              error: 'Failed to generate PDF'
-                            }
-                          )
+                        onClick={async () => {
+                          try {
+                            toast.loading('Generating PDF Invoice...', { id: 'pdf-gen' })
+                            await downloadBookingPDF(b, profile)
+                            toast.success('PDF Invoice downloaded successfully!', { id: 'pdf-gen' })
+                          } catch (err) {
+                            console.error(err)
+                            toast.error('Failed to generate PDF Invoice.', { id: 'pdf-gen' })
+                          }
                         }}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-650 hover:bg-purple-700 text-white transition-all text-xs font-bold cursor-pointer active:scale-95 shadow-md shadow-purple-650/15"
                       >
@@ -1217,6 +1221,17 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* INVOICE MODAL */}
+      <InvoiceModal
+        isOpen={invoiceModalOpen}
+        onClose={() => {
+          setInvoiceModalOpen(false)
+          setSelectedInvoiceBooking(null)
+        }}
+        booking={selectedInvoiceBooking}
+        profile={profile}
+      />
 
     </div>
   )

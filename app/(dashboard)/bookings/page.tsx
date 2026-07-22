@@ -21,11 +21,13 @@ import {
   Share2,
   Phone,
   Eye,
-  Headphones
+  Headphones,
+  Sparkles
 } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import { downloadBookingPDF, downloadBookingsListPDF } from '@/components/bookings/BookingContract'
 import CustomDatePicker from '@/components/bookings/CustomDatePicker'
+import InvoiceModal from '@/components/bookings/InvoiceModal'
 
 
 interface Booking {
@@ -45,6 +47,7 @@ interface Booking {
   remaining_amount: number
   status: string
   notes: string | null
+  items?: any[]
   created_at: string
 }
 
@@ -107,6 +110,8 @@ export default function BookingsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [viewBooking, setViewBooking] = useState<Booking | null>(null)
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState<Booking | null>(null)
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState('')
@@ -124,6 +129,62 @@ export default function BookingsPage() {
   const [advanceAmount, setAdvanceAmount] = useState('0')
   const [status, setStatus] = useState('pending')
   const [notes, setNotes] = useState('')
+
+  // Form Invoice Items State (Reference equipment/services list)
+  interface InvoiceItemRow {
+    id: string
+    description: string
+    quantity: number
+  }
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItemRow[]>([])
+
+  const handleInvoiceItemChange = (index: number, field: string, val: any) => {
+    const updated = [...invoiceItems]
+    const current = { ...updated[index] }
+
+    if (field === 'description') {
+      current.description = String(val)
+    } else if (field === 'quantity') {
+      current.quantity = val === '' ? 1 : Math.max(1, parseInt(val, 10) || 1)
+    }
+
+    updated[index] = current
+    setInvoiceItems(updated)
+  }
+
+  const handleAddInvoiceItem = () => {
+    setInvoiceItems([
+      ...invoiceItems,
+      {
+        id: String(Date.now()),
+        description: '',
+        quantity: 1
+      }
+    ])
+  }
+
+  const handleRemoveInvoiceItem = (index: number) => {
+    if (invoiceItems.length <= 1) {
+      setInvoiceItems([{ id: '1', description: '', quantity: 1 }])
+      return
+    }
+    setInvoiceItems(invoiceItems.filter((_, idx) => idx !== index))
+  }
+
+  // Direct PDF Invoice generation without extra steps/modals
+  const handleDirectDownloadInvoice = async (b: Booking) => {
+    try {
+      setActiveDownloadId(b.id)
+      toast.loading('Generating PDF Invoice...', { id: 'pdf-gen' })
+      await downloadBookingPDF(b, profile)
+      toast.success('PDF Invoice downloaded successfully!', { id: 'pdf-gen' })
+    } catch (err) {
+      console.error('Failed to generate PDF Invoice', err)
+      toast.error('Failed to generate PDF Invoice.', { id: 'pdf-gen' })
+    } finally {
+      setActiveDownloadId(null)
+    }
+  }
 
   // AM/PM time selector states
   const [startHour, setStartHour] = useState('')
@@ -179,7 +240,7 @@ export default function BookingsPage() {
       const [bookingsRes, programsRes, profileRes] = await Promise.all([
         supabase
           .from('bookings')
-          .select('id, customer_name, mobile_number, program_id, program_name_snapshot, event_date, start_time, end_time, venue_address, maps_link, guest_count, total_amount, advance_amount, remaining_amount, status, notes, created_at'),
+          .select('id, customer_name, mobile_number, program_id, program_name_snapshot, event_date, start_time, end_time, venue_address, maps_link, guest_count, total_amount, advance_amount, remaining_amount, status, notes, items, created_at'),
         supabase
           .from('programs')
           .select('id, name'),
@@ -317,6 +378,7 @@ export default function BookingsPage() {
   }, [eventDate, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod, editingId, checkConflicts])
 
   // 3. Form launchers
+  // 3. Form launchers
   const handleOpenNew = () => {
     setEditingId(null)
     setCustomerName('')
@@ -336,6 +398,9 @@ export default function BookingsPage() {
     setAdvanceAmount('0')
     setStatus('pending')
     setNotes('')
+    setInvoiceItems([
+      { id: '1', description: '', quantity: 1 }
+    ])
     setHasConflict(false)
     setConflictDetails(null)
     setModalOpen(true)
@@ -365,6 +430,23 @@ export default function BookingsPage() {
     setAdvanceAmount(String(b.advance_amount))
     setStatus(b.status)
     setNotes(b.notes || '')
+
+    if (Array.isArray(b.items) && b.items.length > 0) {
+      setInvoiceItems(b.items.map((it: any, idx: number) => ({
+        id: it.id || String(idx + 1),
+        description: it.description || it.name || '',
+        quantity: Math.max(1, Number(it.quantity) || 1)
+      })))
+    } else {
+      setInvoiceItems([
+        {
+          id: '1',
+          description: b.program_name_snapshot || 'General Event Service',
+          quantity: 1
+        }
+      ])
+    }
+
     setModalOpen(true)
   }
 
@@ -476,10 +558,16 @@ export default function BookingsPage() {
         }
       }
 
+      const validItems = invoiceItems.map((it, idx) => ({
+        id: it.id || String(idx + 1),
+        description: it.description.trim() || progName || 'General Event Service',
+        quantity: Math.max(1, Number(it.quantity) || 1)
+      }))
+
       const totalVal = Number(totalAmount) || 0
       const advVal = Number(advanceAmount) || 0
 
-      const payload = {
+      const payload: any = {
         customer_name: customerName.trim(),
         mobile_number: mobileNumber.trim(),
         program_id: finalProgramId,
@@ -493,30 +581,40 @@ export default function BookingsPage() {
         total_amount: totalVal,
         advance_amount: advVal,
         status,
-        notes: notes.trim() || null
+        notes: notes.trim() || null,
+        items: validItems
       }
 
+      let saveError = null
       if (editingId) {
-        const { error } = await supabase
-          .from('bookings')
-          .update(payload)
-          .eq('id', editingId)
-
-        if (error) throw error
+        const res = await supabase.from('bookings').update(payload).eq('id', editingId)
+        saveError = res.error
+        if (saveError && saveError.message?.includes('column "items"')) {
+          delete payload.items
+          const retry = await supabase.from('bookings').update(payload).eq('id', editingId)
+          saveError = retry.error
+        }
+        if (saveError) throw saveError
         toast.success('Booking updated')
 
         setModalOpen(false)
         router.replace('/bookings')
         fetchData()
       } else {
-        const { error } = await supabase
-          .from('bookings')
-          .insert({
+        const res = await supabase.from('bookings').insert({
+          owner_id: user.id,
+          ...payload
+        })
+        saveError = res.error
+        if (saveError && saveError.message?.includes('column "items"')) {
+          delete payload.items
+          const retry = await supabase.from('bookings').insert({
             owner_id: user.id,
             ...payload
           })
-
-        if (error) throw error
+          saveError = retry.error
+        }
+        if (saveError) throw saveError
         toast.success('Booking created successfully')
 
         setModalOpen(false)
@@ -844,20 +942,16 @@ export default function BookingsPage() {
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5 animate-none">
                           <button
-                            onClick={() => {
-                              toast.promise(
-                                downloadBookingPDF(b as any, profile),
-                                {
-                                  loading: 'Generating PDF Invoice...',
-                                  success: 'PDF Invoice downloaded successfully!',
-                                  error: 'Failed to generate PDF'
-                                }
-                              )
-                            }}
+                            onClick={() => handleDirectDownloadInvoice(b)}
+                            disabled={activeDownloadId === b.id}
                             title="Download PDF Invoice"
-                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            className="p-2 rounded-lg bg-slate-950/40 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
                           >
-                            <FileDown size={14} className="text-indigo-400" />
+                            {activeDownloadId === b.id ? (
+                              <Loader2 size={14} className="text-indigo-400 animate-spin" />
+                            ) : (
+                              <FileDown size={14} className="text-indigo-400" />
+                            )}
                           </button>
 
                           <button
@@ -1040,20 +1134,16 @@ export default function BookingsPage() {
                     </button>
 
                     <button
-                      onClick={() => {
-                        toast.promise(
-                          downloadBookingPDF(b as any, profile),
-                          {
-                            loading: 'Generating PDF...',
-                            success: 'PDF downloaded!',
-                            error: 'Failed to generate PDF'
-                          }
-                        )
-                      }}
+                      onClick={() => handleDirectDownloadInvoice(b)}
+                      disabled={activeDownloadId === b.id}
                       title="Download PDF Invoice"
-                      className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-white transition-colors cursor-pointer text-[11px] font-bold h-12 w-full active:scale-95"
+                      className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-white transition-colors cursor-pointer text-[11px] font-bold h-12 w-full active:scale-95 disabled:opacity-50"
                     >
-                      <FileDown size={14} className="shrink-0" />
+                      {activeDownloadId === b.id ? (
+                        <Loader2 size={14} className="shrink-0 animate-spin" />
+                      ) : (
+                        <FileDown size={14} className="shrink-0" />
+                      )}
                       <span>Invoice</span>
                     </button>
 
@@ -1451,6 +1541,75 @@ export default function BookingsPage() {
                 </span>
               </div>
 
+              {/* INCLUDED SERVICES & EQUIPMENT LIST (Placed below pricing/payment section) */}
+              <div className="space-y-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-indigo-400" /> Included Services & Equipment List
+                    </h4>
+                    <p className="text-[11px] text-slate-500">Reference equipment and services included in this booking contract</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddInvoiceItem}
+                    className="flex items-center gap-1.5 text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Plus size={14} /> Add Item
+                  </button>
+                </div>
+
+                <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950/80 text-slate-400 uppercase font-bold border-b border-slate-800 text-[10px]">
+                        <th className="py-2.5 px-3 text-center w-10">#</th>
+                        <th className="py-2.5 px-3">Item Description</th>
+                        <th className="py-2.5 px-3 text-center w-24">Quantity</th>
+                        <th className="py-2.5 px-2 text-center w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {invoiceItems.map((item, idx) => (
+                        <tr key={item.id || idx} className="hover:bg-slate-800/20 transition-colors">
+                          <td className="py-2 px-3 text-center font-bold text-slate-500 text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) => handleInvoiceItemChange(idx, 'description', e.target.value)}
+                              placeholder="e.g. Sound System & DJ Setup"
+                              className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 outline-none transition-colors"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleInvoiceItemChange(idx, 'quantity', e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-2 py-1.5 text-xs text-white text-center outline-none transition-colors"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveInvoiceItem(idx)}
+                              className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                              title="Remove Item"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {/* Notes */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Event Notes / Details</label>
@@ -1540,6 +1699,16 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      <InvoiceModal
+        isOpen={invoiceModalOpen}
+        onClose={() => {
+          setInvoiceModalOpen(false)
+          setSelectedInvoiceBooking(null)
+        }}
+        booking={selectedInvoiceBooking}
+        profile={profile}
+      />
     </>
   )
 }

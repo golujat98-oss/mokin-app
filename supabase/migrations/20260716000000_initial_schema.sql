@@ -81,6 +81,7 @@ create table public.bookings (
   remaining_amount numeric(12,2) generated always as (total_amount - advance_amount) stored,
   status text default 'pending' check (status in ('pending', 'confirmed', 'completed', 'cancelled')),
   notes text,
+  items jsonb default '[]'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   deleted_at timestamptz
